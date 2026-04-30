@@ -1,0 +1,48 @@
+# Operating system
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Java / Maven
+backend/target/
+*.class
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+backend/src/main/resources/application.yml
+backend/src/main/resources/application-*.yml
+!backend/src/main/resources/application.yml.example
+
+# Logs
+*.log
+logs/
+
+# Uploads and generated runtime files
+backend/uploads/
+frontend/coverage/
+
+# Office temporary files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+2026课程设计实验指导书V1.docx
+*.tmp
+~WRL*.tmp
+responsibility_matrix.md
+PROJECT_STRUCTURE.md
+git_rules.md
+backend_api.md
+db.md
+architect.md
