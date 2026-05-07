@@ -2,6 +2,24 @@
 
 ## 架构和类设计
 
+### 原始提示词
+根据目录下的用户故事文档（（模块1）user_stories.md）和交互场景文档（（模块1）use_cases.md），为“智投社区：股票基金投资论坛系统”进行架构与类设计。要求包括：总体架构、技术选型、后端分层、模块划分、核心业务对象设计、类属性、类操作和类图。核心类命名必须使用 User、Section、Post、Comment、Group。
+
+### AI输出截图
+![alt text](figs/（模块2）ai-architect-1.png)
+
+### 人发现可能的问题
+AI 初稿能够识别出 User、Section、Post、Comment、Group 五个核心类，也能给出前后端分离的大致架构。但是初稿存在三个问题：第一，类提取过程不够清楚，没有说明哪些类是从需求中筛选出来的；第二，核心类和数据库表、后端接口之间没有建立对应关系；第三，技术选型比较笼统，没有结合仓库中后端 README 和前端 README 已经规划的 Spring Boot 3、MyBatis-Plus、MySQL、JWT、Vue 3、Vite、Element Plus 等技术。
+
+### 迭代优化（提示词）
+请根据上一轮输出进行迭代优化。1. 补充“以需求描述作为输入，提取类及其属性和操作”的过程。2. 核心类必须使用 User、Section、Post、Comment、Group。3. 补充后端分层架构、模块划分和包结构。4. 类图使用 Mermaid classDiagram。5. 将类设计与数据库表、RESTful API、前端页面对应起来，保证能指导后续开发。
+
+### AI输出截图
+![alt text](figs/（模块2）ai-architect-2.png)
+
+### 最终结果
+迭代后架构与类设计文档基本完善，采用“前后端分离 + Spring Boot 分层后端 + MyBatis-Plus + MySQL + JWT”的总体方案。文档明确了 auth、forum、interaction、admin 四个后端业务模块，提取了 User、Section、Post、Comment、Group 五个核心类，并补充 UserFollow、GroupMember、UserAction、Attachment、Tag、AuditLog、Report、Notification 等辅助类。类图、数据库表映射和接口映射能够和后续后端开发保持一致。
+
 ## 前端UI
 
 ### 原始提示词  
