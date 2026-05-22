@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.common.exceptions import AppException
 from app.common.response import success
+from app.modules.forum import router as forum_router
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 
@@ -36,3 +37,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.get("/api/health")
 def health_check():
     return success({"status": "ok"})
+
+
+app.include_router(forum_router)
