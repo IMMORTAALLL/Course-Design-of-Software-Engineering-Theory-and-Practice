@@ -1,14 +1,25 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { RouterLink, RouterView, useRouter } from "vue-router";
+
+import { authState, isAuthenticated, loadCurrentUser, logout } from "@/modules/auth/stores/authStore";
 
 const router = useRouter();
 const keyword = ref("");
+
+onMounted(() => {
+  loadCurrentUser();
+});
 
 function submitSearch() {
   const value = keyword.value.trim();
   if (!value) return;
   router.push({ path: "/search", query: { keyword: value } });
+}
+
+async function submitLogout() {
+  await logout();
+  router.push("/");
 }
 </script>
 
@@ -32,6 +43,14 @@ function submitSearch() {
         <RouterLink to="/sections">板块</RouterLink>
         <RouterLink to="/hot">热榜</RouterLink>
         <RouterLink to="/posts/create">发帖</RouterLink>
+        <template v-if="isAuthenticated">
+          <RouterLink to="/me">{{ authState.user?.nickname || "个人中心" }}</RouterLink>
+          <button class="nav-button" type="button" @click="submitLogout">退出</button>
+        </template>
+        <template v-else>
+          <RouterLink to="/login">登录</RouterLink>
+          <RouterLink to="/register">注册</RouterLink>
+        </template>
       </nav>
     </header>
 
@@ -40,3 +59,16 @@ function submitSearch() {
     </main>
   </div>
 </template>
+
+<style scoped>
+.nav-button {
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  padding: 0;
+}
+
+.nav-button:hover {
+  color: var(--green);
+}
+</style>
