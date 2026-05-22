@@ -1877,3 +1877,178 @@ components:
 最终后端接口采用 RESTful API 风格，以 `/api` 作为统一前缀，后台接口统一使用 `/api/admin` 前缀。接口使用 JWT Bearer Token 完成身份认证，使用统一响应结构返回业务结果，使用错误码区分参数错误、未登录、权限不足、资源不存在和系统异常等情况。
 
 课程设计阶段优先实现注册登录、板块浏览、发帖、帖子详情、评论、点赞、收藏、关注、群组加入和后台审核等核心闭环。OpenAPI 3.0 YAML 覆盖主要路径和 schema，可作为前端联调、接口测试和后续代码生成的基础。
+
+## 十一、成员 D 后台模块实现补充
+
+本节记录成员 D 已落地的后台管理接口。当前后端采用 `FastAPI + SQLAlchemy` 实现，接口统一挂载在 `/api/admin` 下，统一响应结构仍保持：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {}
+}
+```
+
+当前本地开发服务地址为：
+
+```text
+http://127.0.0.1:8001
+```
+
+### 1. 已实现接口清单
+
+| 方法 | 路径 | 说明 | 前端页面 |
+| --- | --- | --- | --- |
+| `GET` | `/api/admin/overview` | 获取后台首页概览统计 | `/admin` |
+| `GET` | `/api/admin/audit-queue` | 获取内容审核队列 | `/admin/audits` |
+| `PATCH` | `/api/admin/audit-queue/{item_id}` | 更新审核队列条目状态 | `/admin/audits` |
+| `GET` | `/api/admin/reports` | 获取举报处理列表 | `/admin/reports` |
+| `PATCH` | `/api/admin/reports/{item_id}` | 更新举报处理状态 | `/admin/reports` |
+| `GET` | `/api/admin/sensitive-words` | 获取敏感词列表 | `/admin/sensitive-words` |
+| `PATCH` | `/api/admin/sensitive-words/{word_id}` | 启用或停用敏感词 | `/admin/sensitive-words` |
+| `GET` | `/api/admin/user-moderation` | 获取用户处罚记录 | `/admin/users` |
+| `GET` | `/api/admin/statistics` | 获取运营统计摘要 | `/admin/statistics` |
+
+### 2. 后台概览接口
+
+```text
+GET /api/admin/overview
+权限：Admin
+```
+
+响应数据字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `today_posts` | number | 今日发帖数量 |
+| `pending_audits` | number | 待审核内容数量 |
+| `pending_reports` | number | 待处理举报数量 |
+| `active_sensitive_words` | number | 当前启用的敏感词数量 |
+
+### 3. 内容审核接口
+
+```text
+GET /api/admin/audit-queue
+PATCH /api/admin/audit-queue/{item_id}
+权限：Admin
+```
+
+审核队列返回字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | number | 审核条目 ID |
+| `content_type` | string | 内容类型 |
+| `title` | string | 内容标题 |
+| `author_name` | string | 作者昵称 |
+| `reason` | string | 进入审核队列的原因 |
+| `risk_level` | string | 风险等级 |
+| `status` | string | 当前审核状态 |
+| `created_at` | string | 创建时间 |
+
+更新审核状态请求体：
+
+```json
+{
+  "action": "approve"
+}
+```
+
+当前前端使用的动作值包括：
+
+- `approve`
+- `reject`
+
+### 4. 举报处理接口
+
+```text
+GET /api/admin/reports
+PATCH /api/admin/reports/{item_id}
+权限：Admin
+```
+
+举报列表返回字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | number | 举报 ID |
+| `target_type` | string | 被举报对象类型 |
+| `target_title` | string | 被举报对象标题 |
+| `reporter_name` | string | 举报人昵称 |
+| `reason` | string | 举报原因 |
+| `status` | string | 举报处理状态 |
+| `created_at` | string | 举报时间 |
+
+处理举报请求体：
+
+```json
+{
+  "action": "warning_issued"
+}
+```
+
+当前前端使用的动作值包括：
+
+- `dismissed`
+- `warning_issued`
+- `banned`
+
+### 5. 敏感词管理接口
+
+```text
+GET /api/admin/sensitive-words
+PATCH /api/admin/sensitive-words/{word_id}
+权限：Admin
+```
+
+敏感词返回字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | number | 敏感词 ID |
+| `keyword` | string | 敏感词内容 |
+| `category` | string | 分类 |
+| `risk_level` | string | 风险等级 |
+| `action` | string | 命中后的处理方式 |
+| `enabled` | boolean | 是否启用 |
+| `note` | string/null | 备注 |
+| `created_at` | string | 创建时间 |
+
+启用或停用请求体：
+
+```json
+{
+  "enabled": false
+}
+```
+
+### 6. 用户处罚与统计接口
+
+```text
+GET /api/admin/user-moderation
+GET /api/admin/statistics
+权限：Admin
+```
+
+用户处罚记录返回字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | number | 处罚记录 ID |
+| `user_name` | string | 用户昵称 |
+| `action` | string | 处罚动作 |
+| `reason` | string | 处罚原因 |
+| `status` | string | 当前状态 |
+| `created_at` | string | 处罚时间 |
+
+运营统计接口返回：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `hot_topics` | string[] | 热门话题列表 |
+| `active_sections` | object[] | 活跃板块统计 |
+
+### 7. 当前实现说明
+
+当前实现已经满足后台管理首页、内容审核、举报处理、敏感词管理、用户处罚记录和运营统计的基础联调。独立的用户禁言、封号写接口还没有拆出；目前举报处理里的 `banned` 动作只更新举报处理结果，不会同步修改用户账号状态。

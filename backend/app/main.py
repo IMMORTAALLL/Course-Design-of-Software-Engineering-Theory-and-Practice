@@ -6,13 +6,20 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.common.exceptions import AppException
 from app.common.response import success
-from app.modules.auth.admin_router import router as admin_router
+from app.database import Base, SessionLocal, engine
+from app.modules.admin.bootstrap import seed_admin_demo_data
+from app.modules.admin.router import router as admin_audit_router
+from app.modules.auth.admin_router import router as auth_admin_router
 from app.modules.auth.cert_router import router as cert_router
 from app.modules.auth.router import router as auth_router
 from app.modules.auth.user_router import router as user_router
 from app.modules.forum import router as forum_router
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
+
+Base.metadata.create_all(bind=engine)
+with SessionLocal() as db:
+    seed_admin_demo_data(db)
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,5 +64,6 @@ def health_check():
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(cert_router)
-app.include_router(admin_router)
+app.include_router(auth_admin_router)
 app.include_router(forum_router)
+app.include_router(admin_audit_router)

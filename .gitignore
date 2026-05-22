@@ -36,6 +36,7 @@ logs/
 
 # Uploads and generated runtime files
 backend/uploads/
+backend/forum_system.db
 frontend/coverage/
 
 # Office temporary files

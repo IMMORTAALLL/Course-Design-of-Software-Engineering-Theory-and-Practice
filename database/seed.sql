@@ -1,5 +1,5 @@
 -- 智投社区初始化演示数据
--- 合并成员A用户权限模块与成员B论坛内容模块演示数据。
+-- 合并成员A用户权限模块、成员B论坛内容模块与成员D后台审核模块演示数据。
 
 USE `forum_system_db`;
 
@@ -82,3 +82,51 @@ INSERT INTO `post_tags` (`post_id`, `tag_id`) VALUES
 (4, 3)
 ON DUPLICATE KEY UPDATE
     `post_id` = VALUES(`post_id`);
+
+-- 初始化后台审核队列
+INSERT INTO `audit_queue_items` (`id`, `content_type`, `title`, `author_name`, `reason`, `risk_level`, `status`) VALUES
+(1, 'post', '推荐某股票明天必涨停', '短线猎手', '违规荐股', 'high', 'pending'),
+(2, 'comment', '保证收益，跟单联系我', '暴涨带队', '广告引流', 'high', 'pending'),
+(3, 'attachment', '基金收益分析表', '稳健定投者', '附件待审核', 'medium', 'reviewing')
+ON DUPLICATE KEY UPDATE
+    `content_type` = VALUES(`content_type`),
+    `title` = VALUES(`title`),
+    `author_name` = VALUES(`author_name`),
+    `reason` = VALUES(`reason`),
+    `risk_level` = VALUES(`risk_level`),
+    `status` = VALUES(`status`);
+
+-- 初始化举报处理数据
+INSERT INTO `report_items` (`id`, `target_type`, `target_title`, `reporter_name`, `reason`, `status`) VALUES
+(1, 'post', '内部消息，今晚布局', '价值观察员', '虚假荐股', 'pending'),
+(2, 'comment', '拉你进群带你赚钱', '理性投资人', '广告引流', 'pending')
+ON DUPLICATE KEY UPDATE
+    `target_type` = VALUES(`target_type`),
+    `target_title` = VALUES(`target_title`),
+    `reporter_name` = VALUES(`reporter_name`),
+    `reason` = VALUES(`reason`),
+    `status` = VALUES(`status`);
+
+-- 初始化敏感词规则
+INSERT INTO `sensitive_words` (`id`, `keyword`, `category`, `risk_level`, `action`, `enabled`, `note`) VALUES
+(1, '稳赚不赔', '违规荐股', 'high', 'manual_review', 1, '高风险承诺收益表述'),
+(2, '内部消息', '违规荐股', 'high', 'manual_review', 1, '涉及未证实内幕信息'),
+(3, '带单', '广告引流', 'medium', 'manual_review', 1, '常见引流词')
+ON DUPLICATE KEY UPDATE
+    `keyword` = VALUES(`keyword`),
+    `category` = VALUES(`category`),
+    `risk_level` = VALUES(`risk_level`),
+    `action` = VALUES(`action`),
+    `enabled` = VALUES(`enabled`),
+    `note` = VALUES(`note`);
+
+-- 初始化用户处罚记录
+INSERT INTO `user_moderation_records` (`id`, `user_name`, `action`, `reason`, `status`) VALUES
+(1, '暴涨带队', 'warning', '多次发布广告引流评论', 'active'),
+(2, '内幕先知道', 'mute', '散布未证实内幕消息', 'muted'),
+(3, '稳赚俱乐部', 'ban', '反复发布违规荐股内容', 'banned')
+ON DUPLICATE KEY UPDATE
+    `user_name` = VALUES(`user_name`),
+    `action` = VALUES(`action`),
+    `reason` = VALUES(`reason`),
+    `status` = VALUES(`status`);

@@ -228,3 +228,370 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.admin-app {
+  min-height: 100vh;
+}
+
+.admin-shell {
+  --admin-bg-page: #f5f7fb;
+  --admin-bg-surface: rgba(255, 255, 255, 0.9);
+  --admin-bg-accent: #e8eefc;
+  --admin-text-main: #172033;
+  --admin-text-muted: #5f6b84;
+  --admin-border: #d8dfed;
+  --admin-primary: #2249d8;
+  --admin-primary-strong: #1736a5;
+  --admin-danger-soft: #fde7e7;
+  --admin-shadow: 0 16px 40px rgba(26, 43, 92, 0.08);
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  min-height: 100vh;
+  color: var(--admin-text-main);
+  background:
+    radial-gradient(circle at top left, rgba(34, 73, 216, 0.12), transparent 34%),
+    radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 28%),
+    var(--admin-bg-page);
+}
+
+.admin-shell table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-shell th,
+.admin-shell td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--admin-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-shell th {
+  color: var(--admin-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-sidebar {
+  padding: 28px 18px;
+  background: linear-gradient(180deg, #182643, #0f1a31);
+  color: #fff;
+}
+
+.sidebar-brand {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 28px;
+}
+
+.sidebar-kicker,
+.topbar-kicker,
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sidebar-kicker {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.nav-item {
+  display: block;
+  padding: 10px 12px;
+  color: rgba(255, 255, 255, 0.82);
+  border-radius: 8px;
+}
+
+.nav-item.router-link-active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.admin-content {
+  padding: 24px;
+}
+
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.admin-topbar h1 {
+  margin: 6px 0 0;
+  font-size: 28px;
+}
+
+.topbar-kicker,
+.topbar-meta,
+.panel-note,
+.todo-list,
+.token-card p,
+.token-card small {
+  color: var(--admin-text-muted);
+}
+
+.topbar-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.admin-body {
+  max-width: 1280px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 28px 30px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(232, 238, 252, 0.92));
+  border: 1px solid rgba(216, 223, 237, 0.92);
+  border-radius: 8px;
+  box-shadow: var(--admin-shadow);
+}
+
+.hero-title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.hero-copy {
+  max-width: 720px;
+  margin: 12px 0 0;
+  color: var(--admin-text-muted);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--admin-primary);
+}
+
+.refresh-button {
+  min-width: 116px;
+  padding: 11px 16px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--admin-primary), var(--admin-primary-strong));
+  border: 0;
+  border-radius: 8px;
+}
+
+.metric-grid,
+.quick-grid,
+.panel-grid {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.metric-grid,
+.quick-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.panel-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.quick-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  color: var(--admin-text-main);
+  background: var(--admin-bg-surface);
+  border: 1px solid rgba(216, 223, 237, 0.92);
+  border-radius: 8px;
+  box-shadow: var(--admin-shadow);
+}
+
+.quick-card span {
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.metric-card,
+.admin-shell .panel,
+.token-card {
+  background: var(--admin-bg-surface);
+  border: 1px solid rgba(216, 223, 237, 0.92);
+  box-shadow: var(--admin-shadow);
+}
+
+.metric-card {
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.metric-label {
+  display: block;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.metric-value {
+  display: block;
+  margin-top: 8px;
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.admin-shell .panel {
+  margin-top: 18px;
+  padding: 22px;
+  border-radius: 8px;
+}
+
+.panel-header,
+.token-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.panel-header {
+  margin-bottom: 16px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.panel-note {
+  font-size: 12px;
+}
+
+.token-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.token-card {
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.topic-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.todo-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.topic-chip,
+.badge {
+  display: inline-flex;
+  padding: 6px 10px;
+  color: var(--admin-primary);
+  background: var(--admin-bg-accent);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.section-bars {
+  display: grid;
+  gap: 12px;
+}
+
+.section-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 36px;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.bar-track {
+  height: 9px;
+  overflow: hidden;
+  background: #edf2fb;
+  border-radius: 999px;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(135deg, var(--admin-primary), #2f7cf4);
+  border-radius: inherit;
+}
+
+.action-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ghost-button,
+.toggle-button {
+  padding: 7px 10px;
+  color: var(--admin-text-main);
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+}
+
+.ghost-button:hover,
+.toggle-button:hover {
+  color: var(--admin-primary);
+  border-color: var(--admin-primary);
+}
+
+.ghost-button.danger {
+  color: #b42318;
+}
+
+.ghost-button.danger:hover {
+  border-color: #b42318;
+}
+
+.error-text {
+  margin-top: 16px;
+  padding: 12px 14px;
+  color: #b42318;
+  background: var(--admin-danger-soft);
+  border-radius: 8px;
+}
+
+@media (max-width: 980px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-sidebar {
+    padding-bottom: 18px;
+  }
+
+  .admin-topbar,
+  .hero {
+    flex-direction: column;
+  }
+
+  .metric-grid,
+  .panel-grid,
+  .quick-grid,
+  .token-list {
+    grid-template-columns: 1fr;
+  }
+}
