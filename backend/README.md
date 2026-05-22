@@ -1,27 +1,65 @@
 # 后端项目说明
 
-后端规划使用 Spring Boot 3 + MyBatis-Plus + MySQL + JWT。当前目录先建立标准模块结构，后续由各成员在对应模块中补充代码。
+后端使用 Python FastAPI + SQLAlchemy + MySQL + JWT。
+
+## 技术栈
+
+- Python 3.10+
+- FastAPI 0.115
+- SQLAlchemy 2.0（同步模式 + pymysql）
+- MySQL 8.0
+- JWT 认证（python-jose）
+- 密码加密（passlib + bcrypt）
+
+## 快速启动
+
+```bash
+cd backend
+pip install --target=./venv_lib -r requirements.txt
+cp .env.example .env  # 修改数据库密码等配置
+
+# Windows (Git Bash)
+PYTHONPATH=./venv_lib python -m uvicorn app.main:app --reload
+
+# Windows (CMD)
+set PYTHONPATH=./venv_lib && python -m uvicorn app.main:app --reload
+```
+
+启动后访问 http://localhost:8000/docs 查看接口文档。
 
 ## 模块所有权
 
 | 模块 | 负责人 | 目录 |
 | --- | --- | --- |
-| 用户与权限 | 成员A | `src/main/java/com/stockforum/modules/auth` |
-| 论坛内容 | 成员B | `src/main/java/com/stockforum/modules/forum` |
-| 社交互动 | 成员C | `src/main/java/com/stockforum/modules/interaction` |
-| 审核后台 | 成员D | `src/main/java/com/stockforum/modules/admin` |
+| 用户与权限 | 成员A | `app/modules/auth` |
+| 论坛内容 | 成员B | `app/modules/forum` |
+| 社交互动 | 成员C | `app/modules/interaction` |
+| 审核后台 | 成员D | `app/modules/admin` |
 
-## 包结构约定
+## 目录结构
+
+```text
+backend/
+├── app/
+│   ├── main.py          # FastAPI 入口
+│   ├── config.py        # 配置（从 .env 读取）
+│   ├── database.py      # 数据库连接
+│   ├── common/          # 通用组件（响应、异常、依赖）
+│   ├── security/        # JWT、密码工具
+│   └── modules/         # 业务模块
+├── requirements.txt
+└── .env.example
+```
+
+## 模块内部结构约定
 
 每个模块内部按以下结构组织：
 
 ```text
-controller/
-service/
-mapper/
-entity/
-dto/
-vo/
+models.py      # SQLAlchemy 模型
+schemas.py     # Pydantic 请求/响应模型
+service.py     # 业务逻辑
+router.py      # API 路由
 ```
 
-公共代码放在 `common`、`config`、`security` 中。修改公共代码前需要在小组内说明影响范围。
+公共代码放在 `common/`、`security/` 中。修改公共代码前需要在小组内说明影响范围。

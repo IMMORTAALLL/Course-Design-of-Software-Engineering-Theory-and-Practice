@@ -7,9 +7,14 @@ Thumbs.db
 .vscode/
 *.iml
 
-# Java / Maven
+# Java / Maven (legacy)
 backend/target/
 *.class
+
+# Python
+backend/venv_lib/
+**/__pycache__/
+*.pyc
 
 # Node / frontend
 frontend/node_modules/
