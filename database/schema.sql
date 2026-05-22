@@ -1,5 +1,5 @@
 -- 智投社区数据库建表脚本
--- 基于（模块2）db.md 设计文档生成，并合并成员A用户权限模块与成员B论坛内容模块。
+-- 基于（模块2）db.md 设计文档生成，并合并成员A用户权限模块、成员B论坛内容模块与成员D后台审核模块。
 
 CREATE DATABASE IF NOT EXISTS `forum_system_db`
     DEFAULT CHARACTER SET utf8mb4
@@ -12,6 +12,10 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 清理旧表
 -- ==========================================================
 DROP TABLE IF EXISTS `post_tags`;
+DROP TABLE IF EXISTS `user_moderation_records`;
+DROP TABLE IF EXISTS `sensitive_words`;
+DROP TABLE IF EXISTS `report_items`;
+DROP TABLE IF EXISTS `audit_queue_items`;
 DROP TABLE IF EXISTS `reports`;
 DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `hot_topics`;
@@ -239,5 +243,51 @@ CREATE TABLE `reports` (
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_report_user` FOREIGN KEY (`reporter_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户举报表';
+
+CREATE TABLE `audit_queue_items` (
+    `id` INT NOT NULL AUTO_INCREMENT COMMENT '审核队列条目ID',
+    `content_type` VARCHAR(32) NOT NULL COMMENT '内容类型',
+    `title` VARCHAR(255) NOT NULL COMMENT '内容标题',
+    `author_name` VARCHAR(64) NOT NULL COMMENT '作者昵称',
+    `reason` VARCHAR(255) NOT NULL COMMENT '进入审核队列原因',
+    `risk_level` VARCHAR(16) NOT NULL DEFAULT 'medium' COMMENT '风险等级',
+    `status` VARCHAR(16) NOT NULL DEFAULT 'pending' COMMENT '审核状态',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='后台审核队列表';
+
+CREATE TABLE `report_items` (
+    `id` INT NOT NULL AUTO_INCREMENT COMMENT '举报处理条目ID',
+    `target_type` VARCHAR(32) NOT NULL COMMENT '被举报对象类型',
+    `target_title` VARCHAR(255) NOT NULL COMMENT '被举报对象标题',
+    `reporter_name` VARCHAR(64) NOT NULL COMMENT '举报人昵称',
+    `reason` VARCHAR(255) NOT NULL COMMENT '举报原因',
+    `status` VARCHAR(16) NOT NULL DEFAULT 'pending' COMMENT '处理状态',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '举报时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='后台举报处理表';
+
+CREATE TABLE `sensitive_words` (
+    `id` INT NOT NULL AUTO_INCREMENT COMMENT '敏感词ID',
+    `keyword` VARCHAR(64) NOT NULL COMMENT '敏感词内容',
+    `category` VARCHAR(32) NOT NULL COMMENT '分类',
+    `risk_level` VARCHAR(16) NOT NULL DEFAULT 'medium' COMMENT '风险等级',
+    `action` VARCHAR(32) NOT NULL DEFAULT 'manual_review' COMMENT '命中后动作',
+    `enabled` TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用',
+    `note` TEXT NULL COMMENT '备注',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_sensitive_words_keyword` (`keyword`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='敏感词规则表';
+
+CREATE TABLE `user_moderation_records` (
+    `id` INT NOT NULL AUTO_INCREMENT COMMENT '处罚记录ID',
+    `user_name` VARCHAR(64) NOT NULL COMMENT '用户昵称',
+    `action` VARCHAR(32) NOT NULL COMMENT '处罚动作',
+    `reason` VARCHAR(255) NOT NULL COMMENT '处罚原因',
+    `status` VARCHAR(16) NOT NULL DEFAULT 'active' COMMENT '当前状态',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '处罚时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户处罚记录表';
 
 SET FOREIGN_KEY_CHECKS = 1;

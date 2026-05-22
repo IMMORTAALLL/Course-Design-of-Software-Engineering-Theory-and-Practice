@@ -556,3 +556,85 @@ INSERT INTO `sections` (`name`, `description`, `sort_order`) VALUES
 ('A股市场', '中国A股市场行情与个股讨论', 10),
 ('基金专区', '各类公募/私募基金交流', 9),
 ('量化交易', '量化模型与算法策略探讨', 8);
+
+## 5. 成员 D 后台管理实现补充
+
+原数据库设计文档以 MySQL 8.0 为正式设计目标。当前成员 D 在本地联调阶段使用 `FastAPI + SQLAlchemy`，默认连接为 SQLite：
+
+```text
+sqlite:///./forum_system.db
+```
+
+SQLite 数据库文件路径为：
+
+```text
+backend/forum_system.db
+```
+
+该文件属于本地运行产物，已经加入 `.gitignore`，不进入 Git 提交。正式部署时仍可通过 `DATABASE_URL` 切换到团队确认的数据库。
+
+### 5.1 审核队列表 (`audit_queue_items`)
+
+用于保存需要管理员人工处理的内容审核条目。
+
+| 字段名 | SQLAlchemy 类型 | 允许为空 | 说明 |
+| --- | --- | --- | --- |
+| `id` | Integer | 否 | 审核条目主键 |
+| `content_type` | String(32) | 否 | 内容类型 |
+| `title` | String(255) | 否 | 内容标题 |
+| `author_name` | String(64) | 否 | 作者昵称 |
+| `reason` | String(255) | 否 | 进入审核队列的原因 |
+| `risk_level` | String(16) | 否 | 风险等级，默认 `medium` |
+| `status` | String(16) | 否 | 审核状态，默认 `pending` |
+| `created_at` | DateTime | 否 | 创建时间 |
+
+### 5.2 举报处理表 (`report_items`)
+
+用于保存用户举报以及后台处理结果。
+
+| 字段名 | SQLAlchemy 类型 | 允许为空 | 说明 |
+| --- | --- | --- | --- |
+| `id` | Integer | 否 | 举报记录主键 |
+| `target_type` | String(32) | 否 | 被举报对象类型 |
+| `target_title` | String(255) | 否 | 被举报对象标题 |
+| `reporter_name` | String(64) | 否 | 举报人昵称 |
+| `reason` | String(255) | 否 | 举报原因 |
+| `status` | String(16) | 否 | 处理状态，默认 `pending` |
+| `created_at` | DateTime | 否 | 举报时间 |
+
+### 5.3 敏感词表 (`sensitive_words`)
+
+用于保存后台维护的敏感词规则。
+
+| 字段名 | SQLAlchemy 类型 | 允许为空 | 说明 |
+| --- | --- | --- | --- |
+| `id` | Integer | 否 | 敏感词主键 |
+| `keyword` | String(64) | 否 | 敏感词内容，唯一 |
+| `category` | String(32) | 否 | 分类 |
+| `risk_level` | String(16) | 否 | 风险等级，默认 `medium` |
+| `action` | String(32) | 否 | 命中后的处理方式，默认 `manual_review` |
+| `enabled` | Boolean | 否 | 是否启用，默认启用 |
+| `note` | Text | 是 | 备注 |
+| `created_at` | DateTime | 否 | 创建时间 |
+
+### 5.4 用户处罚记录表 (`user_moderation_records`)
+
+用于记录管理员对用户的处罚或处理历史。
+
+| 字段名 | SQLAlchemy 类型 | 允许为空 | 说明 |
+| --- | --- | --- | --- |
+| `id` | Integer | 否 | 处罚记录主键 |
+| `user_name` | String(64) | 否 | 用户昵称 |
+| `action` | String(32) | 否 | 处罚动作 |
+| `reason` | String(255) | 否 | 处罚原因 |
+| `status` | String(16) | 否 | 当前状态，默认 `active` |
+| `created_at` | DateTime | 否 | 处罚时间 |
+
+### 5.5 与后台页面的对应关系
+
+| 表名 | 对应接口 | 对应前端页面 |
+| --- | --- | --- |
+| `audit_queue_items` | `/api/admin/audit-queue` | `/admin/audits` |
+| `report_items` | `/api/admin/reports` | `/admin/reports` |
+| `sensitive_words` | `/api/admin/sensitive-words` | `/admin/sensitive-words` |
+| `user_moderation_records` | `/api/admin/user-moderation` | `/admin/users` |

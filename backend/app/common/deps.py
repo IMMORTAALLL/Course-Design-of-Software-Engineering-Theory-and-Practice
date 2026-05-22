@@ -27,3 +27,6 @@ def get_current_user(
     if user is None:
         raise TokenInvalidError("用户不存在")
     return user
+
+
+__all__ = ["get_db", "get_current_user"]

@@ -37,6 +37,9 @@ export default {
   put<T>(url: string, data?: unknown, config?: Record<string, unknown>) {
     return unwrap<T>(request.put<ApiResponse<T>>(url, data, config));
   },
+  patch<T>(url: string, data?: unknown, config?: Record<string, unknown>) {
+    return unwrap<T>(request.patch<ApiResponse<T>>(url, data, config));
+  },
   delete<T>(url: string, config?: Record<string, unknown>) {
     return unwrap<T>(request.delete<ApiResponse<T>>(url, config));
   }

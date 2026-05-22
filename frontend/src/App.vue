@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { RouterLink, RouterView, useRouter } from "vue-router";
+import { computed, ref } from "vue";
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 
+const route = useRoute();
 const router = useRouter();
 const keyword = ref("");
+const isAdminRoute = computed(() => route.path.startsWith("/admin"));
 
 function submitSearch() {
   const value = keyword.value.trim();
@@ -13,8 +15,8 @@ function submitSearch() {
 </script>
 
 <template>
-  <div class="app-shell">
-    <header class="site-header">
+  <div :class="isAdminRoute ? 'admin-app' : 'app-shell'">
+    <header v-if="!isAdminRoute" class="site-header">
       <RouterLink class="brand" to="/">
         <span class="brand-mark">智</span>
         <span>
@@ -32,11 +34,13 @@ function submitSearch() {
         <RouterLink to="/sections">板块</RouterLink>
         <RouterLink to="/hot">热榜</RouterLink>
         <RouterLink to="/posts/create">发帖</RouterLink>
+        <RouterLink to="/admin">后台</RouterLink>
       </nav>
     </header>
 
-    <main>
+    <main v-if="!isAdminRoute">
       <RouterView />
     </main>
+    <RouterView v-else />
   </div>
 </template>
