@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
-import { createPost, fetchSections, fetchTags } from "../api/forumApi";
+import { createAnalysisPost, createPost, fetchSections, fetchTags } from "../api/forumApi";
 import type { Section, Tag } from "../types/forum";
 
 const router = useRouter();
@@ -11,6 +11,7 @@ const tags = ref<Tag[]>([]);
 const sectionId = ref<number | null>(null);
 const title = ref("");
 const content = ref("");
+const postMode = ref<"normal" | "analysis">("normal");
 const selectedTags = ref<number[]>([]);
 const saving = ref(false);
 const errorMessage = ref("");
@@ -30,12 +31,13 @@ async function submitPost() {
   saving.value = true;
   errorMessage.value = "";
   try {
-    const post = await createPost({
+    const payload = {
       section_id: sectionId.value,
       title: title.value.trim(),
       content: content.value.trim(),
       tag_ids: selectedTags.value
-    });
+    };
+    const post = postMode.value === "analysis" ? await createAnalysisPost(payload) : await createPost(payload);
     router.push(`/posts/${post.id}`);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "发布失败";
@@ -67,6 +69,14 @@ async function submitPost() {
       <div class="field">
         <label>帖子标题</label>
         <input v-model="title" maxlength="120" placeholder="例如：A股震荡时如何看待新能源板块？" />
+      </div>
+
+      <div class="field">
+        <label>内容类型</label>
+        <select v-model="postMode">
+          <option value="normal">普通帖子</option>
+          <option value="analysis">长文分析</option>
+        </select>
       </div>
 
       <div class="field">

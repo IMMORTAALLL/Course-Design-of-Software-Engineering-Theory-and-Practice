@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.common.deps import get_current_user
+from app.common.exceptions import ForbiddenError
 from app.common.response import paginated, success
 from app.database import get_db
+from app.modules.auth.models import User
 from app.modules.forum import crud
 from app.modules.forum.schemas import (
     PostCreate,
@@ -12,6 +15,11 @@ from app.modules.forum.schemas import (
 )
 
 router = APIRouter(prefix="/api", tags=["forum"])
+
+
+def _can_manage_post(current_user: User, post_user_id: int) -> bool:
+    role_names = {role.name for role in current_user.roles}
+    return current_user.id == post_user_id or "ADMIN" in role_names
 
 
 @router.get("/sections")
@@ -49,9 +57,26 @@ def list_posts(
 
 
 @router.post("/posts")
-def create_post(payload: PostCreate, db: Session = Depends(get_db)):
-    post = crud.create_post(db, payload, user_id=1)
+def create_post(
+    payload: PostCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    post = crud.create_post(db, payload, user_id=current_user.id)
     return success(crud.post_to_detail(post), "帖子发布成功")
+
+
+@router.post("/posts/analysis")
+def create_analysis_post(
+    payload: PostCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    auth_level = current_user.profile.auth_level if current_user.profile else 0
+    if auth_level < 2:
+        raise ForbiddenError("需要专业认证后才能发布长文分析")
+    post = crud.create_post(db, payload, user_id=current_user.id, post_type=2)
+    return success(crud.post_to_detail(post), "长文分析发布成功")
 
 
 @router.get("/posts/{post_id}")
@@ -61,13 +86,28 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/posts/{post_id}")
-def update_post(post_id: int, payload: PostUpdate, db: Session = Depends(get_db)):
+def update_post(
+    post_id: int,
+    payload: PostUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    existing = crud.get_post(db, post_id, increase_view=False)
+    if not _can_manage_post(current_user, existing.user_id):
+        raise ForbiddenError("只能编辑自己的帖子")
     post = crud.update_post(db, post_id, payload)
     return success(crud.post_to_detail(post), "帖子更新成功")
 
 
 @router.delete("/posts/{post_id}")
-def delete_post(post_id: int, db: Session = Depends(get_db)):
+def delete_post(
+    post_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    existing = crud.get_post(db, post_id, increase_view=False)
+    if not _can_manage_post(current_user, existing.user_id):
+        raise ForbiddenError("只能删除自己的帖子")
     post = crud.delete_post(db, post_id)
     return success({"id": post.id, "status": post.status}, "帖子已删除")
 

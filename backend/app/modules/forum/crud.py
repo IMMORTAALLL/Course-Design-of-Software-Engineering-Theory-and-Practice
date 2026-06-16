@@ -2,6 +2,7 @@ from sqlalchemy import and_, desc, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.exceptions import ResourceNotFoundError
+from app.modules.auth.models import User
 from app.modules.forum.models import Post, PostTag, Section, Tag
 from app.modules.forum.schemas import PostCreate, PostUpdate, SectionCreate, TagCreate
 
@@ -30,17 +31,22 @@ def tag_to_read(tag: Tag) -> dict:
 
 def post_to_item(post: Post) -> dict:
     summary = post.content[:120] + ("..." if len(post.content) > 120 else "")
+    author_profile = post.author.profile if post.author and post.author.profile else None
     return {
         "id": post.id,
         "section_id": post.section_id,
         "section_name": post.section.name if post.section else "",
         "user_id": post.user_id,
+        "author_nickname": author_profile.nickname if author_profile else "社区用户",
+        "author_auth_level": author_profile.auth_level if author_profile else 0,
         "title": post.title,
         "summary": summary,
+        "post_type": post.post_type,
         "status": post.status,
         "view_count": post.view_count,
         "like_count": post.like_count,
         "comment_count": post.comment_count,
+        "is_elite": post.is_elite,
         "created_at": post.created_at,
         "tags": [tag_to_read(tag) for tag in _post_tags(post)],
     }
@@ -82,6 +88,7 @@ def create_section(db: Session, payload: SectionCreate) -> Section:
 def _base_post_query():
     return select(Post).options(
         joinedload(Post.section),
+        joinedload(Post.author).joinedload(User.profile),
         joinedload(Post.tags).joinedload(PostTag.tag),
     )
 
@@ -141,12 +148,13 @@ def _sync_post_tags(db: Session, post: Post, tag_ids: list[int]) -> None:
         db.add(PostTag(post_id=post.id, tag_id=tag.id))
 
 
-def create_post(db: Session, payload: PostCreate, user_id: int = 1) -> Post:
+def create_post(db: Session, payload: PostCreate, user_id: int, post_type: int = 1) -> Post:
     get_section(db, payload.section_id)
     post = Post(
         section_id=payload.section_id,
         user_id=user_id,
         title=payload.title,
+        post_type=post_type,
         content=payload.content,
         status=PUBLISHED_STATUS,
     )

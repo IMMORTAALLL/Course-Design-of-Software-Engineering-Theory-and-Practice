@@ -18,12 +18,16 @@ export interface PostListItem {
   section_id: number;
   section_name: string;
   user_id: number;
+  author_nickname?: string | null;
+  author_auth_level: number;
   title: string;
   summary: string;
+  post_type: number;
   status: string;
   view_count: number;
   like_count: number;
   comment_count: number;
+  is_elite: number;
   created_at: string;
   tags: Tag[];
 }

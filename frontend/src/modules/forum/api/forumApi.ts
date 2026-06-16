@@ -26,6 +26,10 @@ export function createPost(payload: PostCreatePayload) {
   return request.post<PostDetail>("/posts", payload);
 }
 
+export function createAnalysisPost(payload: PostCreatePayload) {
+  return request.post<PostDetail>("/posts/analysis", payload);
+}
+
 export function fetchTags(tagType?: string) {
   return request.get<Tag[]>("/tags", { params: tagType ? { tag_type: tagType } : undefined });
 }

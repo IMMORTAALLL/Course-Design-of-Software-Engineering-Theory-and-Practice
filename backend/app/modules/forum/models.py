@@ -24,13 +24,15 @@ class Post(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     section_id: Mapped[int] = mapped_column(Integer, ForeignKey("sections.id"), nullable=False)
-    user_id: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     title: Mapped[str] = mapped_column(String(120), nullable=False)
+    post_type: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="PUBLISHED")
     view_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     like_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     comment_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    is_elite: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -40,6 +42,7 @@ class Post(Base):
     )
 
     section: Mapped[Section] = relationship("Section", back_populates="posts")
+    author: Mapped["User"] = relationship("User")
     tags: Mapped[list["PostTag"]] = relationship(
         "PostTag",
         back_populates="post",

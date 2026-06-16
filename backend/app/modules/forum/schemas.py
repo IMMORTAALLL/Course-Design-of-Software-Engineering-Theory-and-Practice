@@ -49,12 +49,16 @@ class PostListItem(BaseModel):
     section_id: int
     section_name: str
     user_id: int
+    author_nickname: str | None = None
+    author_auth_level: int = 0
     title: str
     summary: str
+    post_type: int
     status: str
     view_count: int
     like_count: int
     comment_count: int
+    is_elite: int
     created_at: datetime
     tags: list[TagRead] = Field(default_factory=list)
 

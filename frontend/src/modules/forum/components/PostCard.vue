@@ -21,6 +21,9 @@ defineProps<{
       </div>
       <div class="meta">
         <RouterLink :to="`/sections/${post.section_id}`">{{ post.section_name }}</RouterLink>
+        <RouterLink :to="`/users/${post.user_id}`">{{ post.author_nickname || "社区用户" }}</RouterLink>
+        <span v-if="post.post_type === 2">长文分析</span>
+        <span v-if="post.is_elite">精华</span>
         <span>{{ new Date(post.created_at).toLocaleString() }}</span>
         <span>浏览 {{ post.view_count }}</span>
         <span>点赞 {{ post.like_count }}</span>
