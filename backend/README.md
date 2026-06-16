@@ -14,21 +14,25 @@
 
 ## 快速启动
 
+开发环境默认使用项目内 SQLite。首次启动后会自动创建 `backend/forum_system.db`，并写入用户、板块、帖子、评论、群组、通知和后台审核演示数据。
+
 ```bash
 cd backend
-pip install --target=./venv_lib -r requirements.txt
-cp .env.example .env  # 如需 MySQL，再修改数据库配置
-
-# Windows (Git Bash)
-PYTHONPATH=./venv_lib python -m uvicorn app.main:app --reload
-
-# Windows (CMD)
-set PYTHONPATH=./venv_lib && python -m uvicorn app.main:app --reload
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-启动后访问 http://localhost:8000/docs 查看接口文档。
+启动后访问 http://127.0.0.1:8000/docs 查看接口文档。
 
-如果不额外创建 `.env`，项目会默认在 `backend/forum_system.db` 创建本地 SQLite 数据库并写入管理员演示数据，便于课程设计阶段快速联调。
+演示账号密码均为 `Admin123456`：
+
+| 角色 | 邮箱 | 说明 |
+| --- | --- | --- |
+| 管理员 | `admin@stockforum.com` | 可访问后台审核、举报、敏感词和用户管理 |
+| 普通用户 | `value@stockforum.com` | 可演示发帖、评论、关注、收藏和群组流程 |
+| 专业用户 | `quant@stockforum.com` | 可演示专业认证、长文分析和量化主题内容 |
+
+如需使用 MySQL，可复制 `.env.example` 为 `.env`，修改 `DATABASE_URL` 后再导入 `database/schema.sql` 和 `database/seed.sql`。
 
 ## 模块所有权
 

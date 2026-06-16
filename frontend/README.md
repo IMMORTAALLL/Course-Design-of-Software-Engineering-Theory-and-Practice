@@ -4,13 +4,20 @@
 
 ## 运行方式
 
+先启动后端服务，默认地址为 `http://127.0.0.1:8000`。
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-默认开发地址为 `http://127.0.0.1:5173`。开发环境通过 Vite 将 `/api` 代理到后端服务，默认目标为 `http://127.0.0.1:8001`，可用 `VITE_API_PROXY_TARGET` 覆盖。
+默认开发地址为 `http://127.0.0.1:5173`。开发环境通过 Vite 将 `/api` 代理到 `http://127.0.0.1:8000`，可用 `VITE_API_PROXY_TARGET` 覆盖，例如：
+
+```bash
+$env:VITE_API_PROXY_TARGET="http://127.0.0.1:8001"
+npm run dev
+```
 
 ## 当前已完成
 

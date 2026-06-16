@@ -83,22 +83,27 @@
 
 ## 快速启动
 
+开发环境默认使用本地 SQLite。首次启动后端时会自动创建 `backend/forum_system.db`，并写入板块、标签、帖子、评论、群组、通知和后台审核等演示数据。
+
 ### 后端
 
 ```bash
 cd backend
-pip install --target=./venv_lib -r requirements.txt
-cp .env.example .env  # 修改数据库密码等配置
-
-# 初始化数据库
-mysql -u root -p < database/schema.sql
-mysql -u root -p < database/seed.sql
-
-# 启动服务
-PYTHONPATH=./venv_lib python -m uvicorn app.main:app --reload
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-启动后访问 http://localhost:8000/docs 查看接口文档。
+启动后访问 http://127.0.0.1:8000/docs 查看接口文档。
+
+演示账号密码均为 `Admin123456`：
+
+| 角色 | 邮箱 | 说明 |
+| --- | --- | --- |
+| 管理员 | `admin@stockforum.com` | 可访问后台审核、举报、敏感词和用户管理 |
+| 普通用户 | `value@stockforum.com` | 可发帖、评论、关注、收藏和加入群组 |
+| 专业用户 | `quant@stockforum.com` | 可演示专业认证和长文分析内容 |
+
+如需连接 MySQL，可复制 `backend/.env.example` 为 `backend/.env`，修改 `DATABASE_URL` 后再导入 `database/schema.sql` 和 `database/seed.sql`。
 
 ### 前端
 
@@ -108,4 +113,4 @@ npm install
 npm run dev
 ```
 
-启动后访问 http://localhost:5173 。
+启动后访问 http://127.0.0.1:5173 。Vite 会将 `/api` 代理到 `http://127.0.0.1:8000`，如后端端口不同，可通过 `VITE_API_PROXY_TARGET` 覆盖。
