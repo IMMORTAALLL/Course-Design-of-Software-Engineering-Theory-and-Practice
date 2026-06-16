@@ -113,6 +113,10 @@ async function submitLogout() {
 
         <RouterLink class="action-link" to="/me/certification">认证申请</RouterLink>
         <RouterLink class="action-link" to="/me/risk-assessment">风险测评</RouterLink>
+        <RouterLink class="action-link" to="/me/notifications">通知中心</RouterLink>
+        <RouterLink class="action-link" to="/me/favorites">我的收藏</RouterLink>
+        <RouterLink class="action-link" to="/feed/following">关注动态</RouterLink>
+        <RouterLink class="action-link" to="/groups">投资群组</RouterLink>
         <RouterLink v-if="authState.user?.id" class="action-link" :to="`/users/${authState.user.id}`">查看公开主页</RouterLink>
       </aside>
     </div>

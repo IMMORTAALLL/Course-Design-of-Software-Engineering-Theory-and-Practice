@@ -19,6 +19,11 @@ import PostDetailView from "@/modules/forum/views/PostDetailView.vue";
 import SearchResultView from "@/modules/forum/views/SearchResultView.vue";
 import SectionDetailView from "@/modules/forum/views/SectionDetailView.vue";
 import SectionListView from "@/modules/forum/views/SectionListView.vue";
+import FavoritesView from "@/modules/interaction/views/FavoritesView.vue";
+import FollowingFeedView from "@/modules/interaction/views/FollowingFeedView.vue";
+import GroupDetailView from "@/modules/interaction/views/GroupDetailView.vue";
+import GroupListView from "@/modules/interaction/views/GroupListView.vue";
+import NotificationsView from "@/modules/interaction/views/NotificationsView.vue";
 import { hasAuthToken } from "@/modules/auth/stores/authStore";
 
 const router = createRouter({
@@ -30,7 +35,12 @@ const router = createRouter({
     { path: "/me", name: "profile", component: ProfileView, meta: { requiresAuth: true } },
     { path: "/me/certification", name: "certification", component: CertificationView, meta: { requiresAuth: true } },
     { path: "/me/risk-assessment", name: "risk-assessment", component: RiskAssessmentView, meta: { requiresAuth: true } },
+    { path: "/me/notifications", name: "notifications", component: NotificationsView, meta: { requiresAuth: true } },
+    { path: "/me/favorites", name: "favorites", component: FavoritesView, meta: { requiresAuth: true } },
+    { path: "/feed/following", name: "following-feed", component: FollowingFeedView, meta: { requiresAuth: true } },
     { path: "/users/:id", name: "user-public", component: UserPublicView },
+    { path: "/groups", name: "groups", component: GroupListView },
+    { path: "/groups/:id", name: "group-detail", component: GroupDetailView },
     { path: "/sections", name: "sections", component: SectionListView },
     { path: "/sections/:id", name: "section-detail", component: SectionDetailView },
     { path: "/posts/create", name: "post-create", component: PostCreateView, meta: { requiresAuth: true } },

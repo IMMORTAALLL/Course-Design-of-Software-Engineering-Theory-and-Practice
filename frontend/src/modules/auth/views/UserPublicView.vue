@@ -2,11 +2,16 @@
 import { onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
+import FollowButton from "@/modules/interaction/components/FollowButton.vue";
+import { fetchFollowers, fetchFollowing } from "@/modules/interaction/api/interactionApi";
+import type { UserBrief } from "@/modules/interaction/types/interaction";
 import { fetchPublicUser } from "../api/authApi";
 import type { PublicUser } from "../types/auth";
 
 const route = useRoute();
 const user = ref<PublicUser | null>(null);
+const followers = ref<UserBrief[]>([]);
+const following = ref<UserBrief[]>([]);
 const loading = ref(true);
 const errorMessage = ref("");
 
@@ -21,7 +26,14 @@ async function loadUser() {
   loading.value = true;
   errorMessage.value = "";
   try {
-    user.value = await fetchPublicUser(id);
+    const [userData, followerData, followingData] = await Promise.all([
+      fetchPublicUser(id),
+      fetchFollowers(id),
+      fetchFollowing(id)
+    ]);
+    user.value = userData;
+    followers.value = followerData;
+    following.value = followingData;
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "用户信息加载失败";
   } finally {
@@ -49,9 +61,32 @@ watch(() => route.params.id, loadUser);
         <div class="meta">
           <span>{{ user.authLevel === 2 ? "专业认证" : user.authLevel === 1 ? "实名认证" : "基础用户" }}</span>
           <span>影响力值 {{ user.influenceScore }}</span>
+          <span>粉丝 {{ followers.length }}</span>
+          <span>关注 {{ following.length }}</span>
         </div>
         <p class="bio">{{ user.bio || "这个用户还没有填写简介。" }}</p>
+        <FollowButton :user-id="user.id" />
       </div>
+    </div>
+
+    <div v-if="user" class="grid-2 social-grid">
+      <section class="panel stack">
+        <h2>粉丝</h2>
+        <div v-if="!followers.length" class="empty">暂无粉丝。</div>
+        <RouterLink v-for="item in followers" v-else :key="item.id" class="user-row" :to="`/users/${item.id}`">
+          <span>{{ item.nickname || "社区用户" }}</span>
+          <small>{{ item.authLevel === 2 ? "专业认证" : item.authLevel === 1 ? "实名认证" : "基础用户" }}</small>
+        </RouterLink>
+      </section>
+
+      <section class="panel stack">
+        <h2>关注</h2>
+        <div v-if="!following.length" class="empty">暂无关注。</div>
+        <RouterLink v-for="item in following" v-else :key="item.id" class="user-row" :to="`/users/${item.id}`">
+          <span>{{ item.nickname || "社区用户" }}</span>
+          <small>{{ item.authLevel === 2 ? "专业认证" : item.authLevel === 1 ? "实名认证" : "基础用户" }}</small>
+        </RouterLink>
+      </section>
     </div>
   </section>
 </template>
@@ -87,14 +122,45 @@ h1 {
   margin: 0 0 10px;
 }
 
+h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
 .bio {
   margin-top: 18px;
   color: var(--ink);
   line-height: 1.8;
 }
 
+.social-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 20px;
+}
+
+.user-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.user-row span {
+  font-weight: 700;
+}
+
+.user-row small {
+  color: var(--muted);
+}
+
 @media (max-width: 560px) {
   .public-card {
+    grid-template-columns: 1fr;
+  }
+
+  .social-grid {
     grid-template-columns: 1fr;
   }
 }
