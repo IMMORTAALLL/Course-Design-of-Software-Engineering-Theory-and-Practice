@@ -3,19 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.common.response import success, paginated
-from app.common.deps import get_current_user
-from app.common.exceptions import ForbiddenError, ResourceNotFoundError
-from app.modules.auth.models import User, UserProfile
+from app.common.deps import require_admin
+from app.common.exceptions import ResourceNotFoundError
+from app.modules.auth.models import User
 from app.modules.auth.admin_schemas import UserStatusUpdateRequest
 
 router = APIRouter(prefix="/api/admin", tags=["Admin-User"])
-
-
-def require_admin(current_user: User = Depends(get_current_user)):
-    role_names = [r.name for r in current_user.roles]
-    if "ADMIN" not in role_names:
-        raise ForbiddenError("需要管理员权限")
-    return current_user
 
 
 @router.get("/users")
