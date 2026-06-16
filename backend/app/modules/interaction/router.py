@@ -7,7 +7,7 @@ from app.modules.auth.models import User
 from app.security.jwt import decode_access_token
 from app.modules.interaction import service
 from app.modules.interaction.models import Comment
-from app.modules.interaction.schemas import CommentCreate, GroupCreate
+from app.modules.interaction.schemas import CommentCreate, GroupCreate, ReportCreate
 
 router = APIRouter(prefix="/api", tags=["interaction"])
 
@@ -77,6 +77,15 @@ def toggle_post_like(
     return success(service.toggle_post_like(db, post_id, current_user))
 
 
+@router.get("/posts/{post_id}/interaction-status")
+def get_post_interaction_status(
+    post_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.get_post_interaction_status(db, post_id, current_user))
+
+
 @router.post("/comments/{comment_id}/like")
 def toggle_comment_like(
     comment_id: int,
@@ -84,6 +93,26 @@ def toggle_comment_like(
     db: Session = Depends(get_db),
 ):
     return success(service.toggle_comment_like(db, comment_id, current_user))
+
+
+@router.post("/posts/{post_id}/report")
+def report_post(
+    post_id: int,
+    payload: ReportCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.report_post(db, post_id, current_user, payload.reason), "举报已提交")
+
+
+@router.post("/comments/{comment_id}/report")
+def report_comment(
+    comment_id: int,
+    payload: ReportCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.report_comment(db, comment_id, current_user, payload.reason), "举报已提交")
 
 
 @router.post("/posts/{post_id}/favorite")
@@ -188,7 +217,9 @@ def join_group(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return success(service.join_group(db, group_id, current_user), "已加入群组")
+    data = service.join_group(db, group_id, current_user)
+    message = "已提交加入申请" if data.get("pending") and not data.get("joined") else "已加入群组"
+    return success(data, message)
 
 
 @router.delete("/groups/{group_id}/members/me")

@@ -165,3 +165,33 @@ AI 对已有模块做了必要联动：
 #### 迭代优化
 
 执行 `npm run build`，通过 `vue-tsc --noEmit` 和 `vite build`，确认新增页面、路由和类型定义不会阻塞前端构建。
+
+
+### 六、权限与互动闭环加固
+
+#### 原始提示词
+
+```text
+进行全面专业的检查和测试。禁止虚构，对照整个项目要求审核遗漏，发现问题后补齐。
+```
+
+#### AI输出摘要
+
+AI 在补充审核中发现板块、标签写接口虽然已实现，但需要进一步与管理员权限要求对齐；帖子详情页已有点赞、收藏、关注按钮，但缺少登录用户的初始状态回显；设计文档中存在帖子和评论举报接口，前端入口和后端持久化需要补齐；需审核群组不应直接写入正式成员。
+
+随后补充：
+
+- 为 `POST /api/sections`、`POST /api/tags` 增加管理员权限保护。
+- 增加 `/api/admin/sections`、`/api/admin/tags`，与模块二接口文档的后台路径保持一致。
+- 增加 `GET /api/posts/{id}/interaction-status`，用于帖子详情页回显点赞、收藏和关注作者状态。
+- 增加 `POST /api/posts/{id}/report`、`POST /api/comments/{id}/report`，写入后台 `report_items`。
+- 增加 `group_join_requests`，使需审核群组的加入申请保持 `pending` 状态，不直接写入 `group_members`。
+- 为本地 SQLite 旧库启动补齐新增字段和新增表，避免旧数据库因缺列报错。
+
+#### 人工检查
+
+这些补充只记录已经落地并测试过的功能。群组申请目前实现到“提交申请并保持待审核状态”，没有虚构管理员审批通过/驳回页面。
+
+#### 迭代优化
+
+最终执行 `git diff --check`、`python -m compileall backend\app`、`npm run build` 和 Python 3.12 临时 SQLite FastAPI TestClient 回归。接口回归结果为 35 项通过，0 项失败。

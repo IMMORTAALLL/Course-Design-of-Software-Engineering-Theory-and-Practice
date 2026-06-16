@@ -6,7 +6,9 @@ import type {
   FollowingFeedPage,
   GroupCreatePayload,
   GroupItem,
+  InteractionStatus,
   NotificationItem,
+  ReportResult,
   ToggleResult,
   UserBrief
 } from "../types/interaction";
@@ -31,8 +33,20 @@ export function togglePostLike(postId: number) {
   return request.post<ToggleResult>(`/posts/${postId}/like`);
 }
 
+export function fetchPostInteractionStatus(postId: number) {
+  return request.get<InteractionStatus>(`/posts/${postId}/interaction-status`);
+}
+
 export function toggleCommentLike(commentId: number) {
   return request.post<ToggleResult>(`/comments/${commentId}/like`);
+}
+
+export function reportPost(postId: number, reason: string) {
+  return request.post<ReportResult>(`/posts/${postId}/report`, { reason });
+}
+
+export function reportComment(commentId: number, reason: string) {
+  return request.post<ReportResult>(`/comments/${commentId}/report`, { reason });
 }
 
 export function togglePostFavorite(postId: number) {

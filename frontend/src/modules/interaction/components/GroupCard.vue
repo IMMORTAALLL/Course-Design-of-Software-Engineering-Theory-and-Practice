@@ -19,6 +19,7 @@ defineProps<{
       <span>{{ group.memberCount }} 位成员</span>
       <span>群主 {{ group.creatorNickname }}</span>
       <span v-if="group.joined">已加入</span>
+      <span v-else-if="group.pending">申请中</span>
     </div>
   </article>
 </template>

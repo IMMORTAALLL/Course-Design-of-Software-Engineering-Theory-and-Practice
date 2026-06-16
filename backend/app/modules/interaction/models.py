@@ -75,6 +75,18 @@ class GroupMember(Base):
     user: Mapped["User"] = relationship("User")
 
 
+class GroupJoinRequest(Base):
+    __tablename__ = "group_join_requests"
+
+    group_id: Mapped[int] = mapped_column(Integer, ForeignKey("groups.id"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), primary_key=True)
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    group: Mapped[Group] = relationship("Group")
+    user: Mapped["User"] = relationship("User")
+
+
 class Notification(Base):
     __tablename__ = "notifications"
 

@@ -1,16 +1,32 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
 import { toggleFollow } from "../api/interactionApi";
 
 const props = defineProps<{
   userId: number;
+  initialFollowing?: boolean;
+  initialFollowerCount?: number | null;
 }>();
 
-const following = ref(false);
-const followerCount = ref<number | null>(null);
+const following = ref(Boolean(props.initialFollowing));
+const followerCount = ref<number | null>(props.initialFollowerCount ?? null);
 const loading = ref(false);
 const errorMessage = ref("");
+
+watch(
+  () => props.initialFollowing,
+  (value) => {
+    following.value = Boolean(value);
+  }
+);
+
+watch(
+  () => props.initialFollowerCount,
+  (value) => {
+    followerCount.value = value ?? null;
+  }
+);
 
 async function submit() {
   loading.value = true;

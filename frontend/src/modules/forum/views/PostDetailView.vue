@@ -7,8 +7,14 @@ import CommentList from "@/modules/interaction/components/CommentList.vue";
 import FavoriteButton from "@/modules/interaction/components/FavoriteButton.vue";
 import FollowButton from "@/modules/interaction/components/FollowButton.vue";
 import LikeButton from "@/modules/interaction/components/LikeButton.vue";
-import { createComment, fetchComments } from "@/modules/interaction/api/interactionApi";
-import type { CommentItem } from "@/modules/interaction/types/interaction";
+import {
+  createComment,
+  fetchComments,
+  fetchPostInteractionStatus,
+  reportPost
+} from "@/modules/interaction/api/interactionApi";
+import { hasAuthToken } from "@/modules/auth/stores/authStore";
+import type { CommentItem, InteractionStatus } from "@/modules/interaction/types/interaction";
 import { fetchPost } from "../api/forumApi";
 import TagBadge from "../components/TagBadge.vue";
 import type { PostDetail } from "../types/forum";
@@ -19,9 +25,29 @@ const post = ref<PostDetail | null>(null);
 const comments = ref<CommentItem[]>([]);
 const loading = ref(true);
 const commentError = ref("");
+const reportReason = ref("");
+const reportMessage = ref("");
+const reportError = ref("");
+const reporting = ref(false);
+const interactionStatus = ref<InteractionStatus>({
+  liked: false,
+  favorited: false,
+  followingAuthor: false
+});
+
+function resetInteractionStatus() {
+  interactionStatus.value = {
+    liked: false,
+    favorited: false,
+    followingAuthor: false
+  };
+}
 
 async function loadPost() {
   loading.value = true;
+  resetInteractionStatus();
+  reportMessage.value = "";
+  reportError.value = "";
   try {
     const [postData, commentData] = await Promise.all([
       fetchPost(postId.value),
@@ -29,6 +55,13 @@ async function loadPost() {
     ]);
     post.value = postData;
     comments.value = commentData;
+    if (hasAuthToken()) {
+      try {
+        interactionStatus.value = await fetchPostInteractionStatus(postId.value);
+      } catch {
+        resetInteractionStatus();
+      }
+    }
   } finally {
     loading.value = false;
   }
@@ -46,6 +79,26 @@ async function submitComment(content: string) {
     comments.value = commentData;
   } catch (error) {
     commentError.value = error instanceof Error ? error.message : "评论发布失败";
+  }
+}
+
+async function submitPostReport() {
+  const reason = reportReason.value.trim();
+  if (!reason) {
+    reportError.value = "请填写举报原因。";
+    return;
+  }
+  reporting.value = true;
+  reportError.value = "";
+  reportMessage.value = "";
+  try {
+    await reportPost(postId.value, reason);
+    reportReason.value = "";
+    reportMessage.value = "举报已提交";
+  } catch (error) {
+    reportError.value = error instanceof Error ? error.message : "举报提交失败";
+  } finally {
+    reporting.value = false;
   }
 }
 
@@ -79,10 +132,16 @@ watch(postId, loadPost);
 
       <div class="panel action-panel">
         <div class="action-row">
-          <LikeButton :post-id="post.id" :initial-count="post.like_count" />
-          <FavoriteButton :post-id="post.id" />
-          <FollowButton :user-id="post.user_id" />
+          <LikeButton :post-id="post.id" :initial-count="post.like_count" :initial-active="interactionStatus.liked" />
+          <FavoriteButton :post-id="post.id" :initial-active="interactionStatus.favorited" />
+          <FollowButton :user-id="post.user_id" :initial-following="interactionStatus.followingAuthor" />
         </div>
+        <form class="report-form" @submit.prevent="submitPostReport">
+          <input v-model="reportReason" maxlength="255" placeholder="举报原因" />
+          <button class="action-button" type="submit" :disabled="reporting">举报</button>
+          <span v-if="reportMessage" class="inline-success">{{ reportMessage }}</span>
+          <span v-if="reportError" class="inline-error">{{ reportError }}</span>
+        </form>
       </div>
 
       <section class="panel comments">
@@ -142,6 +201,26 @@ h1 {
   gap: 12px;
 }
 
+.report-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.report-form input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+.inline-success {
+  color: var(--green);
+  font-size: 13px;
+}
+
 .comment-heading {
   display: flex;
   justify-content: space-between;
@@ -157,5 +236,11 @@ h1 {
 .comments {
   display: grid;
   gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .report-form {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

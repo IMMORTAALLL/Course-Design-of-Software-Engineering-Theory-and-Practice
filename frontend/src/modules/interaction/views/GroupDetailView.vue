@@ -12,6 +12,13 @@ const loading = ref(true);
 const acting = ref(false);
 const errorMessage = ref("");
 
+const membershipButtonText = computed(() => {
+  if (!group.value) return "";
+  if (group.value.pending) return "申请中";
+  if (group.value.joined) return "退出群组";
+  return group.value.permission === 2 ? "申请加入" : "加入群组";
+});
+
 async function loadData() {
   loading.value = true;
   errorMessage.value = "";
@@ -25,7 +32,7 @@ async function loadData() {
 }
 
 async function toggleMembership() {
-  if (!group.value) return;
+  if (!group.value || group.value.pending) return;
   acting.value = true;
   errorMessage.value = "";
   try {
@@ -58,8 +65,8 @@ watch(groupId, loadData);
             <span>{{ new Date(group.createdAt).toLocaleString() }}</span>
           </div>
         </div>
-        <button class="primary-button" type="button" :disabled="acting" @click="toggleMembership">
-          {{ group.joined ? "退出群组" : "加入群组" }}
+        <button class="primary-button" type="button" :disabled="acting || group.pending" @click="toggleMembership">
+          {{ membershipButtonText }}
         </button>
       </div>
 

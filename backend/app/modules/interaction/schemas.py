@@ -8,6 +8,10 @@ class CommentCreate(BaseModel):
     content: str = Field(..., min_length=1, max_length=1000)
 
 
+class ReportCreate(BaseModel):
+    reason: str = Field(..., min_length=1, max_length=255)
+
+
 class CommentOut(BaseModel):
     id: int
     post_id: int = Field(alias="postId")
@@ -26,6 +30,14 @@ class CommentOut(BaseModel):
 class ToggleResult(BaseModel):
     active: bool
     count: int
+
+
+class InteractionStatusOut(BaseModel):
+    liked: bool = False
+    favorited: bool = False
+    following_author: bool = Field(False, alias="followingAuthor")
+
+    model_config = {"populate_by_name": True}
 
 
 class FollowResult(BaseModel):
@@ -73,6 +85,7 @@ class GroupOut(BaseModel):
     creator_nickname: str = Field(alias="creatorNickname")
     member_count: int = Field(alias="memberCount")
     joined: bool
+    pending: bool = False
     created_at: datetime = Field(alias="createdAt")
 
     model_config = {"populate_by_name": True}

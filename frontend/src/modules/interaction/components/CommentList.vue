@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import { RouterLink } from "vue-router";
 
-import { createReply, toggleCommentLike } from "../api/interactionApi";
+import { createReply, reportComment, toggleCommentLike } from "../api/interactionApi";
 import type { CommentItem } from "../types/interaction";
 import CommentEditor from "./CommentEditor.vue";
 
@@ -15,6 +15,9 @@ const emit = defineEmits<{
 }>();
 
 const replyTarget = ref<number | null>(null);
+const reportTarget = ref<number | null>(null);
+const reportReason = ref("");
+const reportMessage = ref("");
 const errorMessage = ref("");
 
 async function likeComment(comment: CommentItem) {
@@ -37,11 +40,36 @@ async function submitReply(commentId: number, content: string) {
     errorMessage.value = error instanceof Error ? error.message : "回复失败";
   }
 }
+
+async function submitReport(commentId: number) {
+  const reason = reportReason.value.trim();
+  if (!reason) {
+    errorMessage.value = "请填写举报原因。";
+    return;
+  }
+  errorMessage.value = "";
+  reportMessage.value = "";
+  try {
+    await reportComment(commentId, reason);
+    reportTarget.value = null;
+    reportReason.value = "";
+    reportMessage.value = "举报已提交";
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : "举报失败";
+  }
+}
+
+function toggleReport(commentId: number) {
+  reportTarget.value = reportTarget.value === commentId ? null : commentId;
+  reportReason.value = "";
+  reportMessage.value = "";
+}
 </script>
 
 <template>
   <div class="comment-list">
     <p v-if="errorMessage" class="inline-error">{{ errorMessage }}</p>
+    <p v-if="reportMessage" class="inline-success">{{ reportMessage }}</p>
     <div v-if="!props.comments.length" class="empty">还没有评论，来发表第一条讨论。</div>
 
     <article v-for="comment in props.comments" :key="comment.id" class="comment-item">
@@ -56,6 +84,7 @@ async function submitReply(commentId: number, content: string) {
         <button class="action-button" type="button" @click="replyTarget = replyTarget === comment.id ? null : comment.id">
           回复
         </button>
+        <button class="action-button" type="button" @click="toggleReport(comment.id)">举报</button>
       </div>
 
       <CommentEditor
@@ -65,6 +94,11 @@ async function submitReply(commentId: number, content: string) {
         @submit="submitReply(comment.id, $event)"
       />
 
+      <form v-if="reportTarget === comment.id" class="report-form" @submit.prevent="submitReport(comment.id)">
+        <input v-model="reportReason" maxlength="255" placeholder="举报原因" />
+        <button class="action-button" type="submit">提交</button>
+      </form>
+
       <div v-if="comment.replies.length" class="reply-list">
         <article v-for="reply in comment.replies" :key="reply.id" class="reply-item">
           <div class="comment-meta">
@@ -72,6 +106,13 @@ async function submitReply(commentId: number, content: string) {
             <span>{{ new Date(reply.createdAt).toLocaleString() }}</span>
           </div>
           <p>{{ reply.content }}</p>
+          <div class="comment-actions">
+            <button class="action-button" type="button" @click="toggleReport(reply.id)">举报</button>
+          </div>
+          <form v-if="reportTarget === reply.id" class="report-form" @submit.prevent="submitReport(reply.id)">
+            <input v-model="reportReason" maxlength="255" placeholder="举报原因" />
+            <button class="action-button" type="submit">提交</button>
+          </form>
         </article>
       </div>
     </article>
@@ -118,6 +159,24 @@ p {
   gap: 8px;
 }
 
+.report-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) auto;
+  gap: 8px;
+}
+
+.report-form input {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.inline-success {
+  color: var(--green);
+  font-size: 13px;
+}
+
 .reply-list {
   display: grid;
   gap: 10px;
@@ -127,5 +186,11 @@ p {
 
 .reply-item {
   background: white;
+}
+
+@media (max-width: 560px) {
+  .report-form {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

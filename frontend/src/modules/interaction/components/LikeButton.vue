@@ -6,10 +6,11 @@ import { togglePostLike } from "../api/interactionApi";
 const props = defineProps<{
   postId: number;
   initialCount: number;
+  initialActive?: boolean;
 }>();
 
 const count = ref(props.initialCount);
-const active = ref(false);
+const active = ref(Boolean(props.initialActive));
 const loading = ref(false);
 const errorMessage = ref("");
 
@@ -17,6 +18,13 @@ watch(
   () => props.initialCount,
   (value) => {
     count.value = value;
+  }
+);
+
+watch(
+  () => props.initialActive,
+  (value) => {
+    active.value = Boolean(value);
   }
 );
 

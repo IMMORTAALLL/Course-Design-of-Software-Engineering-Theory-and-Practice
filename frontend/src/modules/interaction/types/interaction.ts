@@ -18,6 +18,17 @@ export interface ToggleResult {
   count: number;
 }
 
+export interface InteractionStatus {
+  liked: boolean;
+  favorited: boolean;
+  followingAuthor: boolean;
+}
+
+export interface ReportResult {
+  id: number;
+  status: string;
+}
+
 export interface FollowResult {
   following: boolean;
   followerCount: number;
@@ -51,6 +62,7 @@ export interface GroupItem {
   creatorNickname: string;
   memberCount: number;
   joined: boolean;
+  pending: boolean;
   createdAt: string;
 }
 

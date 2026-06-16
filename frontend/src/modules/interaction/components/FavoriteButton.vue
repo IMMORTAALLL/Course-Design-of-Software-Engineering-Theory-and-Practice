@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
 import { togglePostFavorite } from "../api/interactionApi";
 
 const props = defineProps<{
   postId: number;
+  initialActive?: boolean;
 }>();
 
-const active = ref(false);
+const active = ref(Boolean(props.initialActive));
 const loading = ref(false);
 const errorMessage = ref("");
+
+watch(
+  () => props.initialActive,
+  (value) => {
+    active.value = Boolean(value);
+  }
+);
 
 async function submit() {
   loading.value = true;

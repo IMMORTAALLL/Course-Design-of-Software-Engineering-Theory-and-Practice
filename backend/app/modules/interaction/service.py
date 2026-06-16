@@ -2,12 +2,14 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.exceptions import ConflictError, ForbiddenError, ResourceNotFoundError, StateNotAllowedError
+from app.modules.admin.models import ReportItem
 from app.modules.auth.models import User
 from app.modules.forum.crud import get_post, post_to_item
 from app.modules.forum.models import Post
 from app.modules.interaction.models import (
     Comment,
     Group,
+    GroupJoinRequest,
     GroupMember,
     Notification,
     UserAction,
@@ -64,8 +66,19 @@ def _group_to_dict(db: Session, group: Group, current_user_id: int | None = None
     creator = _user_brief(group.creator)
     member_count = db.query(func.count(GroupMember.user_id)).filter(GroupMember.group_id == group.id).scalar() or 0
     joined = False
+    pending = False
     if current_user_id:
         joined = db.get(GroupMember, {"group_id": group.id, "user_id": current_user_id}) is not None
+        pending = (
+            db.query(GroupJoinRequest)
+            .filter(
+                GroupJoinRequest.group_id == group.id,
+                GroupJoinRequest.user_id == current_user_id,
+                GroupJoinRequest.status == "pending",
+            )
+            .first()
+            is not None
+        )
     return {
         "id": group.id,
         "name": group.name,
@@ -75,6 +88,7 @@ def _group_to_dict(db: Session, group: Group, current_user_id: int | None = None
         "creatorNickname": creator["nickname"],
         "memberCount": member_count,
         "joined": joined,
+        "pending": pending,
         "createdAt": group.created_at,
     }
 
@@ -220,6 +234,36 @@ def toggle_comment_like(db: Session, comment_id: int, user: User) -> dict:
     return {"active": active, "count": comment.like_count}
 
 
+def get_post_interaction_status(db: Session, post_id: int, user: User) -> dict:
+    post = get_post(db, post_id, increase_view=False)
+    liked = (
+        db.query(UserAction.id)
+        .filter(
+            UserAction.user_id == user.id,
+            UserAction.target_id == post_id,
+            UserAction.target_type == POST_TARGET,
+            UserAction.action_type == LIKE_ACTION,
+        )
+        .first()
+        is not None
+    )
+    favorited = (
+        db.query(UserAction.id)
+        .filter(
+            UserAction.user_id == user.id,
+            UserAction.target_id == post_id,
+            UserAction.target_type == POST_TARGET,
+            UserAction.action_type == FAVORITE_ACTION,
+        )
+        .first()
+        is not None
+    )
+    following_author = False
+    if post.user_id != user.id:
+        following_author = db.get(UserFollow, {"follower_id": user.id, "followed_id": post.user_id}) is not None
+    return {"liked": liked, "favorited": favorited, "followingAuthor": following_author}
+
+
 def toggle_post_favorite(db: Session, post_id: int, user: User) -> dict:
     get_post(db, post_id, increase_view=False)
     active = _toggle_action(db, user.id, post_id, POST_TARGET, FAVORITE_ACTION)
@@ -236,6 +280,41 @@ def toggle_post_favorite(db: Session, post_id: int, user: User) -> dict:
     )
     db.commit()
     return {"active": active, "count": total}
+
+
+def report_post(db: Session, post_id: int, user: User, reason: str) -> dict:
+    post = get_post(db, post_id, increase_view=False)
+    reporter_name = user.profile.nickname if user.profile else "社区用户"
+    item = ReportItem(
+        target_type="post",
+        target_title=post.title,
+        reporter_name=reporter_name,
+        reason=reason,
+        status="pending",
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return {"id": item.id, "status": item.status}
+
+
+def report_comment(db: Session, comment_id: int, user: User, reason: str) -> dict:
+    comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if comment is None:
+        raise ResourceNotFoundError("评论不存在")
+    reporter_name = user.profile.nickname if user.profile else "社区用户"
+    content_summary = comment.content[:60] + ("..." if len(comment.content) > 60 else "")
+    item = ReportItem(
+        target_type="comment",
+        target_title=content_summary,
+        reporter_name=reporter_name,
+        reason=reason,
+        status="pending",
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    return {"id": item.id, "status": item.status}
 
 
 def list_favorite_posts(db: Session, user: User, page: int, size: int) -> tuple[list[dict], int]:
@@ -399,20 +478,38 @@ def join_group(db: Session, group_id: int, user: User) -> dict:
     group = db.query(Group).filter(Group.id == group_id).first()
     if group is None:
         raise ResourceNotFoundError("群组不存在")
+    existing = db.get(GroupMember, {"group_id": group_id, "user_id": user.id})
+    if existing is not None:
+        return get_group(db, group_id, user.id)
     if group.permission == 3:
         raise ForbiddenError("私密群组暂不开放直接加入")
-    existing = db.get(GroupMember, {"group_id": group_id, "user_id": user.id})
-    if existing is None:
-        db.add(GroupMember(group_id=group_id, user_id=user.id))
-        if group.creator_id != user.id:
-            create_notification(
-                db,
-                group.creator_id,
-                "群组新增成员",
-                f"{user.profile.nickname if user.profile else '社区用户'} 加入了群组「{group.name}」",
-                target_type="group",
-                target_id=group.id,
-            )
+    if group.permission == 2:
+        request = db.get(GroupJoinRequest, {"group_id": group_id, "user_id": user.id})
+        if request is None:
+            db.add(GroupJoinRequest(group_id=group_id, user_id=user.id, status="pending"))
+            if group.creator_id != user.id:
+                create_notification(
+                    db,
+                    group.creator_id,
+                    "群组收到加入申请",
+                    f"{user.profile.nickname if user.profile else '社区用户'} 申请加入群组「{group.name}」",
+                    target_type="group",
+                    target_id=group.id,
+                )
+        elif request.status != "pending":
+            request.status = "pending"
+        db.commit()
+        return get_group(db, group_id, user.id)
+    db.add(GroupMember(group_id=group_id, user_id=user.id))
+    if group.creator_id != user.id:
+        create_notification(
+            db,
+            group.creator_id,
+            "群组新增成员",
+            f"{user.profile.nickname if user.profile else '社区用户'} 加入了群组「{group.name}」",
+            target_type="group",
+            target_id=group.id,
+        )
     db.commit()
     return get_group(db, group_id, user.id)
 
@@ -427,4 +524,9 @@ def leave_group(db: Session, group_id: int, user: User) -> dict:
     if member:
         db.delete(member)
         db.commit()
+    else:
+        request = db.get(GroupJoinRequest, {"group_id": group_id, "user_id": user.id})
+        if request and request.status == "pending":
+            db.delete(request)
+            db.commit()
     return get_group(db, group_id, user.id)
