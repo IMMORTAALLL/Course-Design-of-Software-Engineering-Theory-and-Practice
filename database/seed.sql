@@ -33,6 +33,31 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 ON DUPLICATE KEY UPDATE
     `role_id` = VALUES(`role_id`);
 
+-- 初始化普通演示用户（演示密码同管理员账号: Admin123456）
+INSERT INTO `users` (`id`, `phone`, `email`, `password_hash`, `status`) VALUES
+(2, '13800000002', 'value@stockforum.com', '$2b$12$LJ3a4PmYlMQ8M8GZmBZ5aOJXHf9wMq5Y3xKjF5vN0yL8VfKjzKXXi', 0),
+(3, '13800000003', 'quant@stockforum.com', '$2b$12$LJ3a4PmYlMQ8M8GZmBZ5aOJXHf9wMq5Y3xKjF5vN0yL8VfKjzKXXi', 0)
+ON DUPLICATE KEY UPDATE
+    `phone` = VALUES(`phone`),
+    `email` = VALUES(`email`),
+    `status` = VALUES(`status`);
+
+INSERT INTO `user_profiles` (`user_id`, `nickname`, `bio`, `auth_level`, `risk_preference`, `influence_score`) VALUES
+(2, '价值观察员', '关注长期主义和指数基金配置。', 1, 2, 86),
+(3, '量化研究员', '分享量化策略、因子研究和回测经验。', 2, 3, 128)
+ON DUPLICATE KEY UPDATE
+    `nickname` = VALUES(`nickname`),
+    `bio` = VALUES(`bio`),
+    `auth_level` = VALUES(`auth_level`),
+    `risk_preference` = VALUES(`risk_preference`),
+    `influence_score` = VALUES(`influence_score`);
+
+INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
+(2, 1),
+(3, 2)
+ON DUPLICATE KEY UPDATE
+    `role_id` = VALUES(`role_id`);
+
 -- 初始化板块
 INSERT INTO `sections` (`id`, `name`, `description`, `sort_order`, `is_active`) VALUES
 (1, 'A股市场', '围绕A股行情、个股研究和交易经验展开讨论。', 100, 1),
@@ -82,6 +107,54 @@ INSERT INTO `post_tags` (`post_id`, `tag_id`) VALUES
 (4, 3)
 ON DUPLICATE KEY UPDATE
     `post_id` = VALUES(`post_id`);
+
+-- 初始化社交互动数据
+INSERT INTO `comments` (`id`, `post_id`, `user_id`, `parent_id`, `content`, `like_count`) VALUES
+(1, 1, 2, NULL, '白酒板块更适合结合现金流和估值区间看，短期波动不要线性外推。', 5),
+(2, 1, 3, 1, '赞同，最好再叠加成交额和北向资金变化观察。', 2),
+(3, 2, 3, NULL, '定投要先确定资金期限，不能把短期备用金放进去。', 4)
+ON DUPLICATE KEY UPDATE
+    `content` = VALUES(`content`),
+    `like_count` = VALUES(`like_count`);
+
+INSERT INTO `user_actions` (`id`, `user_id`, `target_id`, `target_type`, `action_type`) VALUES
+(1, 2, 1, 1, 1),
+(2, 2, 2, 1, 2),
+(3, 3, 1, 1, 2)
+ON DUPLICATE KEY UPDATE
+    `user_id` = VALUES(`user_id`),
+    `target_id` = VALUES(`target_id`),
+    `target_type` = VALUES(`target_type`),
+    `action_type` = VALUES(`action_type`);
+
+INSERT INTO `user_follows` (`follower_id`, `followed_id`, `is_starred`) VALUES
+(2, 3, 1),
+(3, 2, 0)
+ON DUPLICATE KEY UPDATE
+    `is_starred` = VALUES(`is_starred`);
+
+INSERT INTO `groups` (`id`, `creator_id`, `name`, `description`, `permission`) VALUES
+(1, 3, '量化策略研究小组', '讨论因子、回测、风控和策略复盘。', 1),
+(2, 2, '指数基金长期定投', '适合长期配置和新手基金投资交流。', 1)
+ON DUPLICATE KEY UPDATE
+    `name` = VALUES(`name`),
+    `description` = VALUES(`description`),
+    `permission` = VALUES(`permission`);
+
+INSERT INTO `group_members` (`group_id`, `user_id`) VALUES
+(1, 3),
+(1, 2),
+(2, 2)
+ON DUPLICATE KEY UPDATE
+    `group_id` = VALUES(`group_id`);
+
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `notification_type`, `target_type`, `target_id`, `is_read`) VALUES
+(1, 2, '评论收到回复', '量化研究员回复了你的评论', 'interaction', 'post', 1, 0),
+(2, 3, '新增关注', '价值观察员关注了你', 'interaction', 'user', 2, 0)
+ON DUPLICATE KEY UPDATE
+    `title` = VALUES(`title`),
+    `content` = VALUES(`content`),
+    `is_read` = VALUES(`is_read`);
 
 -- 初始化后台审核队列
 INSERT INTO `audit_queue_items` (`id`, `content_type`, `title`, `author_name`, `reason`, `risk_level`, `status`) VALUES

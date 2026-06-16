@@ -12,6 +12,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 清理旧表
 -- ==========================================================
 DROP TABLE IF EXISTS `post_tags`;
+DROP TABLE IF EXISTS `notifications`;
 DROP TABLE IF EXISTS `user_moderation_records`;
 DROP TABLE IF EXISTS `sensitive_words`;
 DROP TABLE IF EXISTS `report_items`;
@@ -181,6 +182,7 @@ CREATE TABLE `groups` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `creator_id` BIGINT NOT NULL COMMENT '群主ID',
     `name` VARCHAR(50) NOT NULL,
+    `description` VARCHAR(255) COMMENT '群组简介',
     `permission` TINYINT NOT NULL DEFAULT 1 COMMENT '1:公开, 2:审核, 3:私密',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
@@ -195,6 +197,21 @@ CREATE TABLE `group_members` (
     CONSTRAINT `fk_member_group` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`),
     CONSTRAINT `fk_member_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='群成员表';
+
+CREATE TABLE `notifications` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `user_id` BIGINT NOT NULL COMMENT '接收用户ID',
+    `title` VARCHAR(120) NOT NULL COMMENT '通知标题',
+    `content` VARCHAR(255) NOT NULL COMMENT '通知内容',
+    `notification_type` VARCHAR(32) NOT NULL DEFAULT 'interaction' COMMENT 'interaction/audit/system',
+    `target_type` VARCHAR(32) DEFAULT NULL COMMENT 'post/comment/user/group',
+    `target_id` BIGINT DEFAULT NULL COMMENT '关联目标ID',
+    `is_read` TINYINT NOT NULL DEFAULT 0 COMMENT '是否已读',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_notifications_user_read` (`user_id`, `is_read`, `created_at`),
+    CONSTRAINT `fk_notification_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户通知表';
 
 -- ==========================================================
 -- 模块 4：信息整合系统 (Integration System)
