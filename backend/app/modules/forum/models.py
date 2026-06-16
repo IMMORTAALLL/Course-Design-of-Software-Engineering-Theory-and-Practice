@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -22,9 +22,9 @@ class Section(Base):
 class Post(Base):
     __tablename__ = "posts"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     section_id: Mapped[int] = mapped_column(Integer, ForeignKey("sections.id"), nullable=False)
-    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, default=1)
+    user_id: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     title: Mapped[str] = mapped_column(String(120), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="PUBLISHED")
@@ -65,7 +65,7 @@ class Tag(Base):
 class PostTag(Base):
     __tablename__ = "post_tags"
 
-    post_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("posts.id"), primary_key=True)
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("posts.id"), primary_key=True)
     tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id"), primary_key=True)
 
     post: Mapped[Post] = relationship("Post", back_populates="tags")

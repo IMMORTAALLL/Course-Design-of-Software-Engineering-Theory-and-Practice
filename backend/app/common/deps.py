@@ -17,8 +17,12 @@ def get_current_user(
     payload = decode_access_token(token)
     if payload is None:
         raise TokenInvalidError()
-    user_id: int = payload.get("sub")
-    if user_id is None:
+    subject = payload.get("sub")
+    if subject is None:
+        raise TokenInvalidError()
+    try:
+        user_id = int(subject)
+    except (TypeError, ValueError):
         raise TokenInvalidError()
 
     from app.modules.auth.models import User

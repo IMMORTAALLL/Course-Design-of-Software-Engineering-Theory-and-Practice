@@ -80,7 +80,7 @@ def login(db: Session, req: LoginRequest) -> dict:
     if user.roles:
         role_name = user.roles[0].name
 
-    token = create_access_token({"sub": user.id})
+    token = create_access_token({"sub": str(user.id)})
 
     profile = user.profile
     nickname = profile.nickname if profile else "用户"
