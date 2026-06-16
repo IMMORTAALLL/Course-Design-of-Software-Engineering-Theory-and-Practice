@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS `reports`;
 DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `hot_topics`;
 DROP TABLE IF EXISTS `search_history`;
+DROP TABLE IF EXISTS `group_join_requests`;
 DROP TABLE IF EXISTS `group_members`;
 DROP TABLE IF EXISTS `groups`;
 DROP TABLE IF EXISTS `user_follows`;
@@ -197,6 +198,16 @@ CREATE TABLE `group_members` (
     CONSTRAINT `fk_member_group` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`),
     CONSTRAINT `fk_member_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='群成员表';
+
+CREATE TABLE `group_join_requests` (
+    `group_id` BIGINT NOT NULL,
+    `user_id` BIGINT NOT NULL,
+    `status` VARCHAR(16) NOT NULL DEFAULT 'pending' COMMENT '申请状态：pending/approved/rejected',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`group_id`, `user_id`),
+    CONSTRAINT `fk_join_request_group` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_join_request_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='群组加入申请表';
 
 CREATE TABLE `notifications` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,

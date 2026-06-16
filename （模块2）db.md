@@ -291,6 +291,16 @@ flowchart TD
 | `user_id` | BIGINT | PK, FK| 否 | 群内用户ID |
 | `join_time` | DATETIME | - | 否 | 加群时间 |
 
+#### 4. 群组加入申请表 (`group_join_requests`)
+记录“需审核群组”的加入申请。公开群组直接写入 `group_members`，需审核群组先写入本表并保持 `pending` 状态，审核通过后再转为正式成员。
+
+| 字段名 (Field) | 数据类型 (Type) | 主/外键 (Key) | 允许为空 | 说明 (Description) |
+| :--- | :--- | :--- | :--- | :--- |
+| `group_id` | BIGINT | PK, FK | 否 | 关联 `groups.id` |
+| `user_id` | BIGINT | PK, FK | 否 | 申请加入的用户ID |
+| `status` | VARCHAR(16) | - | 否 | 申请状态：pending/approved/rejected |
+| `created_at` | DATETIME | - | 否 | 申请时间 |
+
 ---
 
 ### 3.4 信息整合系统模块 (Integration System) - 【模块4】

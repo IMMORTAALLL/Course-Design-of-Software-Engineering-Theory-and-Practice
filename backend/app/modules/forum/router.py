@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.common.deps import get_current_user
+from app.common.deps import get_current_user, require_admin
 from app.common.exceptions import ForbiddenError
 from app.common.response import paginated, success
 from app.database import get_db
@@ -28,7 +28,21 @@ def list_sections(db: Session = Depends(get_db)):
 
 
 @router.post("/sections")
-def create_section(payload: SectionCreate, db: Session = Depends(get_db)):
+def create_section(
+    payload: SectionCreate,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    section = crud.create_section(db, payload)
+    return success(crud.section_to_read(section), "板块创建成功")
+
+
+@router.post("/admin/sections")
+def admin_create_section(
+    payload: SectionCreate,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     section = crud.create_section(db, payload)
     return success(crud.section_to_read(section), "板块创建成功")
 
@@ -118,7 +132,21 @@ def list_tags(tag_type: str | None = None, db: Session = Depends(get_db)):
 
 
 @router.post("/tags")
-def create_tag(payload: TagCreate, db: Session = Depends(get_db)):
+def create_tag(
+    payload: TagCreate,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    tag = crud.create_tag(db, payload)
+    return success(crud.tag_to_read(tag), "标签创建成功")
+
+
+@router.post("/admin/tags")
+def admin_create_tag(
+    payload: TagCreate,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
     tag = crud.create_tag(db, payload)
     return success(crud.tag_to_read(tag), "标签创建成功")
 

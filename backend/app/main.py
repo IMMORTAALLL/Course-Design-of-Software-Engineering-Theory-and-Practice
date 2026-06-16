@@ -18,7 +18,63 @@ from app.modules.interaction.router import router as interaction_router
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 
+
+def ensure_sqlite_demo_schema() -> None:
+    if engine.dialect.name != "sqlite":
+        return
+    with engine.begin() as conn:
+        post_columns = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(posts)").fetchall()}
+        if "post_type" not in post_columns:
+            conn.exec_driver_sql("ALTER TABLE posts ADD COLUMN post_type INTEGER NOT NULL DEFAULT 1")
+        if "is_elite" not in post_columns:
+            conn.exec_driver_sql("ALTER TABLE posts ADD COLUMN is_elite INTEGER NOT NULL DEFAULT 0")
+
+        group_columns = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(groups)").fetchall()}
+        if "description" not in group_columns:
+            conn.exec_driver_sql("ALTER TABLE groups ADD COLUMN description VARCHAR(255)")
+
+        notification_exists = conn.exec_driver_sql(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='notifications'"
+        ).fetchone()
+        if notification_exists is None:
+            conn.exec_driver_sql(
+                """
+                CREATE TABLE notifications (
+                    id INTEGER NOT NULL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    title VARCHAR(120) NOT NULL,
+                    content VARCHAR(255) NOT NULL,
+                    notification_type VARCHAR(32) NOT NULL,
+                    target_type VARCHAR(32),
+                    target_id INTEGER,
+                    is_read BOOLEAN NOT NULL,
+                    created_at DATETIME NOT NULL,
+                    FOREIGN KEY(user_id) REFERENCES users (id)
+                )
+                """
+            )
+
+        join_request_exists = conn.exec_driver_sql(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='group_join_requests'"
+        ).fetchone()
+        if join_request_exists is None:
+            conn.exec_driver_sql(
+                """
+                CREATE TABLE group_join_requests (
+                    group_id INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    status VARCHAR(16) NOT NULL,
+                    created_at DATETIME NOT NULL,
+                    PRIMARY KEY (group_id, user_id),
+                    FOREIGN KEY(group_id) REFERENCES groups (id),
+                    FOREIGN KEY(user_id) REFERENCES users (id)
+                )
+                """
+            )
+
+
 Base.metadata.create_all(bind=engine)
+ensure_sqlite_demo_schema()
 with SessionLocal() as db:
     seed_admin_demo_data(db)
 

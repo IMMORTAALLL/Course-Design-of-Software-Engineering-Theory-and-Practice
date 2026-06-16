@@ -135,7 +135,8 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO `groups` (`id`, `creator_id`, `name`, `description`, `permission`) VALUES
 (1, 3, '量化策略研究小组', '讨论因子、回测、风控和策略复盘。', 1),
-(2, 2, '指数基金长期定投', '适合长期配置和新手基金投资交流。', 1)
+(2, 2, '指数基金长期定投', '适合长期配置和新手基金投资交流。', 1),
+(3, 3, '专业策略审核群', '需审核后加入的策略交流小组。', 2)
 ON DUPLICATE KEY UPDATE
     `name` = VALUES(`name`),
     `description` = VALUES(`description`),
@@ -147,6 +148,11 @@ INSERT INTO `group_members` (`group_id`, `user_id`) VALUES
 (2, 2)
 ON DUPLICATE KEY UPDATE
     `group_id` = VALUES(`group_id`);
+
+INSERT INTO `group_join_requests` (`group_id`, `user_id`, `status`) VALUES
+(3, 2, 'pending')
+ON DUPLICATE KEY UPDATE
+    `status` = VALUES(`status`);
 
 INSERT INTO `notifications` (`id`, `user_id`, `title`, `content`, `notification_type`, `target_type`, `target_id`, `is_read`) VALUES
 (1, 2, '评论收到回复', '量化研究员回复了你的评论', 'interaction', 'post', 1, 0),

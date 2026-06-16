@@ -144,6 +144,7 @@ Authorization: Bearer <token>
 | `DELETE` | `/api/posts/{id}` | User | 删除自己的帖子 |
 | `POST` | `/api/posts/{id}/like` | User | 点赞或取消点赞 |
 | `POST` | `/api/posts/{id}/favorite` | User | 收藏或取消收藏 |
+| `GET` | `/api/posts/{id}/interaction-status` | User | 获取当前用户对帖子的点赞、收藏、关注作者状态 |
 | `POST` | `/api/posts/{id}/report` | User | 举报帖子 |
 
 ### 4. 评论接口
@@ -1868,9 +1869,9 @@ components:
 | 帖子发布与查询 | `posts`、`attachments`、`user_actions` |
 | 评论与回复 | `comments`、`user_actions` |
 | 关注关系 | `user_follows` |
-| 群组 | `groups`、`group_members` |
+| 群组 | `groups`、`group_members`、`group_join_requests` |
 | 搜索与热榜 | `search_history`、`hot_topics` |
-| 审核与举报 | `audit_logs`、`reports` |
+| 审核与举报 | `audit_logs`、`reports`、`report_items` |
 
 ## 十、最终采用方案
 
