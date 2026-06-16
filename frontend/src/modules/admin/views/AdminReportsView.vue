@@ -21,7 +21,7 @@
             <td>{{ item.target_title }}</td>
             <td>{{ item.reporter_name }}</td>
             <td>{{ item.reason }}</td>
-            <td>{{ item.status }}</td>
+            <td><span class="badge">{{ item.status }}</span></td>
             <td class="action-cell">
               <button class="ghost-button" @click="handleAction(item.id, 'dismissed')">驳回举报</button>
               <button class="ghost-button" @click="handleAction(item.id, 'warning_issued')">警告用户</button>

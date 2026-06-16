@@ -29,9 +29,17 @@ defineProps<{
   display: grid;
   gap: 12px;
   padding: 18px;
-  background: white;
+  background: linear-gradient(180deg, #ffffff, #fbfdfc);
   border: 1px solid var(--line);
   border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.group-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(15, 123, 95, 0.34);
+  box-shadow: var(--shadow);
 }
 
 .group-title {
@@ -40,9 +48,13 @@ defineProps<{
   font-weight: 800;
 }
 
+.group-title:hover {
+  color: var(--green);
+}
+
 p {
   margin: 8px 0 0;
-  color: var(--muted);
+  color: var(--ink-soft);
   line-height: 1.7;
 }
 </style>

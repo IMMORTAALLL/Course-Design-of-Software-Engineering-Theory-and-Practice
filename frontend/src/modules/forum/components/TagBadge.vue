@@ -21,26 +21,27 @@ defineProps<{
   border: 1px solid #d9e4df;
   border-radius: 999px;
   color: #315346;
-  background: #f2faf6;
+  background: var(--green-soft);
   font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
 .stock {
   color: #b42318;
-  background: #fff4f2;
+  background: var(--red-soft);
   border-color: #ffd6d0;
 }
 
 .fund {
-  color: #155eef;
-  background: #eff6ff;
+  color: var(--blue);
+  background: var(--blue-soft);
   border-color: #bfdbfe;
 }
 
 .topic {
-  color: #7a4b00;
-  background: #fff8e5;
+  color: var(--gold);
+  background: var(--gold-soft);
   border-color: #ffe2a3;
 }
 </style>

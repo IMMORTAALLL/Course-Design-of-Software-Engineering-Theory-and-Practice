@@ -132,7 +132,8 @@ function toggleReport(commentId: number) {
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fbfdfc;
+  background: linear-gradient(180deg, #ffffff, #fbfdfc);
+  box-shadow: 0 8px 22px rgba(20, 45, 36, 0.04);
 }
 
 .comment-meta {
@@ -150,6 +151,7 @@ function toggleReport(commentId: number) {
 
 p {
   margin: 0;
+  color: var(--ink-soft);
   line-height: 1.75;
 }
 
@@ -167,25 +169,21 @@ p {
 
 .report-form input {
   min-width: 0;
-  border: 1px solid var(--line);
+  border: 1px solid #cddbd5;
   border-radius: 8px;
   padding: 8px 10px;
-}
-
-.inline-success {
-  color: var(--green);
-  font-size: 13px;
+  outline: 0;
 }
 
 .reply-list {
   display: grid;
   gap: 10px;
   padding-left: 22px;
-  border-left: 3px solid #dbe8e3;
+  border-left: 3px solid var(--green-soft);
 }
 
 .reply-item {
-  background: white;
+  background: #ffffff;
 }
 
 @media (max-width: 560px) {

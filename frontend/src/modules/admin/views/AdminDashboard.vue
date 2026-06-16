@@ -3,8 +3,8 @@
     <section class="hero">
       <div>
         <p class="eyebrow">成员 D / 后台审核模块</p>
-        <h2 class="hero-title">先把审核、举报、敏感词和统计这条管理链路跑通</h2>
-        <p class="hero-copy">这版首页聚焦管理员日常最常打开的概览信息，你后面继续扩展页面时可以直接沿着左侧菜单拆模块，不用再把所有内容塞进一个文件。</p>
+        <h2 class="hero-title">内容风险、用户举报与运营数据统一看板</h2>
+        <p class="hero-copy">集中查看待审核内容、待处理举报、敏感词规则和社区热度，为管理员日常巡检提供入口。</p>
       </div>
       <button class="refresh-button" @click="loadAll">刷新数据</button>
     </section>

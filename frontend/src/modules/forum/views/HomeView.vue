@@ -47,9 +47,10 @@ onMounted(async () => {
             <h2>核心板块</h2>
             <RouterLink to="/sections">查看全部</RouterLink>
           </div>
-          <div class="section-grid">
+          <div v-if="sections.length" class="section-grid">
             <SectionCard v-for="section in sections.slice(0, 4)" :key="section.id" :section="section" />
           </div>
+          <div v-else class="empty compact-empty">暂无板块。</div>
         </section>
 
         <section class="stack">
@@ -57,6 +58,7 @@ onMounted(async () => {
             <h2>最新帖子</h2>
           </div>
           <PostCard v-for="post in latestPosts" :key="post.id" :post="post" />
+          <div v-if="!latestPosts.length" class="empty compact-empty">暂无帖子。</div>
         </section>
       </div>
 
@@ -67,6 +69,7 @@ onMounted(async () => {
         </div>
         <div class="stack">
           <PostCard v-for="(post, index) in hotPosts" :key="post.id" :post="post" :rank="index + 1" />
+          <div v-if="!hotPosts.length" class="empty compact-empty">暂无热门讨论。</div>
         </div>
       </aside>
     </div>
@@ -96,6 +99,10 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+}
+
+.compact-empty {
+  padding: 28px;
 }
 
 @media (max-width: 640px) {

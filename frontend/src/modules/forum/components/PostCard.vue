@@ -39,9 +39,17 @@ defineProps<{
   grid-template-columns: auto 1fr;
   gap: 14px;
   padding: 18px;
-  background: white;
-  border: 1px solid #d8e0dc;
+  background: linear-gradient(180deg, #ffffff, #fbfdfc);
+  border: 1px solid var(--line);
   border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(15, 123, 95, 0.34);
+  box-shadow: var(--shadow);
 }
 
 .rank {
@@ -50,8 +58,9 @@ defineProps<{
   height: 32px;
   place-items: center;
   color: white;
-  background: #157f5b;
+  background: linear-gradient(135deg, var(--green), var(--green-strong));
   border-radius: 6px;
+  box-shadow: 0 8px 18px rgba(15, 123, 95, 0.2);
   font-weight: 800;
 }
 
@@ -61,14 +70,19 @@ defineProps<{
 }
 
 .title {
-  color: #17202a;
+  color: var(--ink);
   font-size: 18px;
+  line-height: 1.35;
   font-weight: 800;
+}
+
+.title:hover {
+  color: var(--green);
 }
 
 p {
   margin: 0;
-  color: #52605a;
+  color: var(--ink-soft);
   line-height: 1.65;
 }
 

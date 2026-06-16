@@ -161,12 +161,15 @@ watch(postId, loadPost);
 <style scoped>
 .detail {
   display: grid;
-  gap: 18px;
+  gap: 20px;
+  padding: 26px;
 }
 
 h1 {
   margin: 0;
-  font-size: 30px;
+  color: var(--ink);
+  font-size: 34px;
+  line-height: 1.22;
 }
 
 .tag-row {
@@ -177,15 +180,18 @@ h1 {
 
 .risk {
   padding: 12px 14px;
-  color: #7a4b00;
-  background: #fff8e5;
+  color: var(--gold);
+  background: var(--gold-soft);
   border: 1px solid #ffe2a3;
   border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .content {
   margin: 0;
-  color: #28352f;
+  color: var(--ink-soft);
+  font-size: 16px;
   line-height: 1.9;
   white-space: pre-wrap;
 }
@@ -199,6 +205,7 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  align-items: center;
 }
 
 .report-form {
@@ -211,14 +218,10 @@ h1 {
 
 .report-form input {
   min-width: 0;
-  border: 1px solid var(--line);
+  border: 1px solid #cddbd5;
   border-radius: 8px;
   padding: 9px 12px;
-}
-
-.inline-success {
-  color: var(--green);
-  font-size: 13px;
+  outline: 0;
 }
 
 .comment-heading {
@@ -230,7 +233,8 @@ h1 {
 
 .comment-heading h2 {
   margin: 0;
-  font-size: 20px;
+  color: var(--ink);
+  font-size: 21px;
 }
 
 .comments {
@@ -239,6 +243,10 @@ h1 {
 }
 
 @media (max-width: 640px) {
+  h1 {
+    font-size: 27px;
+  }
+
   .report-form {
     grid-template-columns: 1fr;
   }

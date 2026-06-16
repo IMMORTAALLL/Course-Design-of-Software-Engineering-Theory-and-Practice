@@ -22,24 +22,27 @@ defineProps<{
   gap: 10px;
   padding: 18px;
   min-height: 138px;
-  background: white;
-  border: 1px solid #d8e0dc;
+  background: linear-gradient(180deg, #ffffff, #fbfdfc);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  transition: transform 0.16s ease, border-color 0.16s ease;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .section-card:hover {
   transform: translateY(-2px);
-  border-color: #157f5b;
+  border-color: rgba(15, 123, 95, 0.38);
+  box-shadow: var(--shadow);
 }
 
 strong {
   font-size: 18px;
+  color: var(--ink);
 }
 
 p {
   margin: 0;
-  color: #52605a;
+  color: var(--ink-soft);
   line-height: 1.55;
 }
 

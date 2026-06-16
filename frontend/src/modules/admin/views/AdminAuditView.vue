@@ -22,8 +22,8 @@
             <td>{{ item.title }}</td>
             <td>{{ item.author_name }}</td>
             <td>{{ item.reason }}</td>
-            <td>{{ item.risk_level }}</td>
-            <td>{{ item.status }}</td>
+            <td><span class="badge">{{ item.risk_level }}</span></td>
+            <td><span class="badge">{{ item.status }}</span></td>
             <td class="action-cell">
               <button class="ghost-button" @click="handleAction(item.id, 'approve')">通过</button>
               <button class="ghost-button danger" @click="handleAction(item.id, 'reject')">驳回</button>
