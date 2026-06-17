@@ -20,8 +20,8 @@
 | 层级 | 技术选型 |
 |------|----------|
 | 后端框架 | Python FastAPI + SQLAlchemy |
-| 前端框架 | Vue 3 + Vite + TypeScript + Element Plus |
-| 数据库 | MySQL 8.0 |
+| 前端框架 | Vue 3 + Vite + TypeScript |
+| 数据库 | SQLite（默认开发）/ MySQL 8.0（可选部署） |
 | 认证方式 | JWT Bearer Token |
 | 密码加密 | bcrypt |
 

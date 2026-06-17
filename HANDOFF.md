@@ -1,5 +1,7 @@
 # 交接文档
 
+> 注意：本文档是 2026-05-22 阶段的历史交接记录，保留用于追溯早期成员 D 后台模块开发过程。当前最终交付状态以 `README.md`、各模块文档、`docx` 分支和 `main` 分支最新提交为准；本文档中的旧路径、旧分支、旧端口和未提交状态不再代表当前项目状态。
+
 更新时间：2026-05-22
 项目路径：`D:\project\soft_practice\Course-Design-of-Software-Engineering-Theory-and-Practice`
 

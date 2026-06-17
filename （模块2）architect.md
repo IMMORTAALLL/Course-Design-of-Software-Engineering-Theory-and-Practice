@@ -71,11 +71,11 @@
         |
         | HTTP + JSON + JWT
         v
-Spring Boot 后端 RESTful API
+FastAPI 后端 RESTful API
         |
-        | MyBatis-Plus
+        | SQLAlchemy ORM
         v
-MySQL 数据库
+SQLite / MySQL 数据库
 ```
 
 ### 2. 架构分层
@@ -84,12 +84,10 @@ MySQL 数据库
 
 | 层次 | 主要职责 | 示例对象 |
 | --- | --- | --- |
-| Controller 层 | 接收 HTTP 请求，校验基础参数，返回统一响应 | `PostController`、`UserController` |
+| Router 层 | 接收 HTTP 请求，校验基础参数，返回统一响应 | `forum/router.py`、`auth/router.py` |
 | Service 层 | 编排业务流程，处理权限、状态、审核等业务规则 | `PostService`、`AuditService` |
-| Mapper 层 | 操作数据库，封装 SQL 或 MyBatis-Plus 查询 | `PostMapper`、`UserMapper` |
-| Entity 层 | 映射数据库表结构 | `User`、`Post`、`Comment` |
-| DTO 层 | 接收请求参数 | `PostCreateDTO`、`LoginDTO` |
-| VO 层 | 返回前端展示数据 | `PostDetailVO`、`UserProfileVO` |
+| Model 层 | 使用 SQLAlchemy 映射数据库表结构 | `User`、`Post`、`Comment` |
+| Schema 层 | 使用 Pydantic 接收请求参数并定义响应结构 | `PostCreate`、`LoginRequest` |
 | Common 层 | 通用响应、错误码、分页、异常处理 | `ApiResponse`、`ErrorCode` |
 | Security 层 | JWT 认证、登录状态、权限校验 | `JwtTokenProvider`、`SecurityContext` |
 
@@ -104,18 +102,18 @@ MySQL 数据库
   |
   | /api/**
   v
-后端服务 Spring Boot 3
+后端服务 FastAPI
   |
-  | JDBC / MyBatis-Plus
+  | SQLAlchemy
   v
-MySQL 8.0 数据库
+SQLite（默认开发）/ MySQL 8.0（可选部署）
 ```
 
 课程设计阶段可以采用单机部署：
 
 - 前端运行在 `localhost:5173`
-- 后端运行在 `localhost:8080`
-- 数据库运行在 `localhost:3306`
+- 后端运行在 `localhost:8000`
+- 开发阶段默认使用本地 SQLite；需要部署到 MySQL 时再导入 `database/schema.sql` 和 `database/seed.sql`
 
 ## 四、技术选型
 
@@ -123,12 +121,13 @@ MySQL 8.0 数据库
 
 | 技术 | 用途 | 选择原因 |
 | --- | --- | --- |
-| Spring Boot 3 | 后端基础框架 | 生态成熟，适合快速构建 RESTful API |
-| Spring Web | Web 接口开发 | 提供 Controller、参数绑定和 JSON 序列化能力 |
-| MyBatis-Plus | 数据访问层 | 简化 CRUD，适合课程项目快速开发 |
-| MySQL 8.0 | 关系型数据库 | 支持事务、索引和外键，适合论坛业务数据 |
+| FastAPI | 后端基础框架 | 原生支持 OpenAPI，适合快速构建 RESTful API |
+| Uvicorn | ASGI 运行服务 | 支持本地开发和接口联调 |
+| SQLAlchemy 2.0 | 数据访问层 | 统一管理模型映射、查询和事务 |
+| SQLite | 开发数据库 | 便于本地冷启动、演示数据初始化和课程验收复现 |
+| MySQL 8.0 | 可选部署数据库 | 支持事务、索引和外键，适合后续部署扩展 |
 | JWT | 登录认证 | 前后端分离场景下便于无状态认证 |
-| Bean Validation | 参数校验 | 统一处理注册、发帖、评论等表单校验 |
+| Pydantic | 参数校验 | 统一处理注册、发帖、评论等表单校验 |
 | OpenAPI 3.0 | 接口文档 | 便于前后端接口联调和答辩展示 |
 
 ### 2. 前端技术选型
@@ -137,16 +136,16 @@ MySQL 8.0 数据库
 | --- | --- | --- |
 | Vue 3 | 前端框架 | 组件化开发，适合中小型课程项目 |
 | Vite | 构建工具 | 启动快，配置简单 |
-| Element Plus | UI 组件库 | 表单、表格、弹窗、分页等组件完善 |
-| Pinia | 状态管理 | 管理登录用户、通知、缓存列表等状态 |
+| TypeScript | 类型约束 | 提升接口数据、组件参数和路由开发的可维护性 |
 | Vue Router | 路由管理 | 支持前台和后台路由拆分 |
-| ECharts | 数据可视化 | 支持后台统计图表 |
+| 原生 CSS 组件样式 | UI 实现 | 当前仓库未引入第三方 UI 组件库，统一使用项目内样式类 |
 
 ### 3. 数据库技术选型
 
 | 技术 | 用途 | 选择原因 |
 | --- | --- | --- |
-| MySQL 8.0 | 数据存储 | 适合用户、帖子、评论、群组等结构化数据 |
+| SQLite | 默认开发存储 | 首次启动自动创建本地演示库，便于快速运行 |
+| MySQL 8.0 | 可选部署存储 | 适合用户、帖子、评论、群组等结构化数据 |
 | InnoDB | 存储引擎 | 支持事务和外键约束 |
 | utf8mb4 | 字符集 | 支持中文、金融符号和 Emoji |
 
@@ -155,42 +154,38 @@ MySQL 8.0 数据库
 后端工程按照模块化方式组织，每个业务模块内部保持一致结构。
 
 ```text
-backend/src/main/java/com/stockforum
+backend/app
+├─ main.py
+├─ config.py
+├─ database.py
 ├─ common
-│  ├─ response
-│  ├─ exception
-│  └─ pagination
-├─ config
+│  ├─ response.py
+│  ├─ exceptions.py
+│  └─ deps.py
 ├─ security
+│  ├─ jwt.py
+│  └─ password.py
 └─ modules
    ├─ auth
-   │  ├─ controller
-   │  ├─ service
-   │  ├─ mapper
-   │  ├─ entity
-   │  ├─ dto
-   │  └─ vo
+   │  ├─ router.py
+   │  ├─ service.py
+   │  ├─ models.py
+   │  └─ schemas.py
    ├─ forum
-   │  ├─ controller
-   │  ├─ service
-   │  ├─ mapper
-   │  ├─ entity
-   │  ├─ dto
-   │  └─ vo
+   │  ├─ router.py
+   │  ├─ crud.py
+   │  ├─ models.py
+   │  └─ schemas.py
    ├─ interaction
-   │  ├─ controller
-   │  ├─ service
-   │  ├─ mapper
-   │  ├─ entity
-   │  ├─ dto
-   │  └─ vo
+   │  ├─ router.py
+   │  ├─ service.py
+   │  ├─ models.py
+   │  └─ schemas.py
    └─ admin
-      ├─ controller
-      ├─ service
-      ├─ mapper
-      ├─ entity
-      ├─ dto
-      └─ vo
+      ├─ router.py
+      ├─ service.py
+      ├─ models.py
+      └─ schemas.py
 ```
 
 ### 1. 模块职责
@@ -207,13 +202,11 @@ backend/src/main/java/com/stockforum
 
 | 类型 | 命名示例 | 说明 |
 | --- | --- | --- |
-| Entity | `User`、`Post` | 与数据库表对应 |
-| DTO | `UserRegisterDTO`、`PostCreateDTO` | 前端请求入参 |
-| VO | `PostDetailVO`、`UserProfileVO` | 返回给前端的展示对象 |
-| Controller | `PostController` | 接口入口 |
-| Service | `PostService` | 业务逻辑接口 |
-| ServiceImpl | `PostServiceImpl` | 业务逻辑实现 |
-| Mapper | `PostMapper` | 数据访问接口 |
+| Model | `User`、`Post` | SQLAlchemy 模型，与数据库表对应 |
+| Schema | `UserRegisterRequest`、`PostCreate` | Pydantic 请求或响应结构 |
+| Router | `router.py` | FastAPI 接口入口 |
+| Service | `service.py` | 业务逻辑与权限状态处理 |
+| CRUD | `crud.py` | 查询和写入封装，当前主要用于论坛内容模块 |
 
 ## 六、类提取与迭代优化过程
 
@@ -871,7 +864,7 @@ classDiagram
 
 ## 十五、最终采用方案
 
-最终架构采用“前后端分离 + Spring Boot 分层后端 + MyBatis-Plus 数据访问 + MySQL 持久化”的设计。
+最终架构采用“前后端分离 + FastAPI 分层后端 + SQLAlchemy 数据访问 + SQLite 默认开发库 / MySQL 可选部署库”的设计。
 
 后端按照 `auth`、`forum`、`interaction`、`admin` 四个业务模块拆分，公共能力放入 `common`、`config` 和 `security`。核心业务类采用 `User`、`Section`、`Post`、`Comment`、`Group` 五个对象作为主干，再使用 `UserFollow`、`GroupMember`、`UserAction`、`Attachment`、`Tag`、`AuditLog`、`Report`、`Notification` 等类补充关系和管理能力。
 
