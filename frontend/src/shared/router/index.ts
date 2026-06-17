@@ -24,7 +24,7 @@ import FollowingFeedView from "@/modules/interaction/views/FollowingFeedView.vue
 import GroupDetailView from "@/modules/interaction/views/GroupDetailView.vue";
 import GroupListView from "@/modules/interaction/views/GroupListView.vue";
 import NotificationsView from "@/modules/interaction/views/NotificationsView.vue";
-import { hasAuthToken } from "@/modules/auth/stores/authStore";
+import { authState, hasAuthToken, loadCurrentUser } from "@/modules/auth/stores/authStore";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -47,21 +47,28 @@ const router = createRouter({
     { path: "/posts/:id", name: "post-detail", component: PostDetailView },
     { path: "/search", name: "search", component: SearchResultView },
     { path: "/hot", name: "hot", component: HotRankView },
-    { path: "/admin", name: "admin-dashboard", component: AdminDashboard, meta: { requiresAuth: true } },
-    { path: "/admin/audits", name: "admin-audits", component: AdminAuditView, meta: { requiresAuth: true } },
-    { path: "/admin/reports", name: "admin-reports", component: AdminReportsView, meta: { requiresAuth: true } },
-    { path: "/admin/sensitive-words", name: "admin-sensitive-words", component: AdminSensitiveWordsView, meta: { requiresAuth: true } },
-    { path: "/admin/users", name: "admin-users", component: AdminModerationView, meta: { requiresAuth: true } },
-    { path: "/admin/statistics", name: "admin-statistics", component: AdminStatisticsView, meta: { requiresAuth: true } }
+    { path: "/admin", name: "admin-dashboard", component: AdminDashboard, meta: { requiresAuth: true, requiresAdmin: true } },
+    { path: "/admin/audits", name: "admin-audits", component: AdminAuditView, meta: { requiresAuth: true, requiresAdmin: true } },
+    { path: "/admin/reports", name: "admin-reports", component: AdminReportsView, meta: { requiresAuth: true, requiresAdmin: true } },
+    { path: "/admin/sensitive-words", name: "admin-sensitive-words", component: AdminSensitiveWordsView, meta: { requiresAuth: true, requiresAdmin: true } },
+    { path: "/admin/users", name: "admin-users", component: AdminModerationView, meta: { requiresAuth: true, requiresAdmin: true } },
+    { path: "/admin/statistics", name: "admin-statistics", component: AdminStatisticsView, meta: { requiresAuth: true, requiresAdmin: true } }
   ]
 });
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   if (to.meta.requiresAuth && !hasAuthToken()) {
     return {
       path: "/login",
       query: { redirect: to.fullPath }
     };
+  }
+
+  if (to.meta.requiresAdmin) {
+    const user = authState.user ?? await loadCurrentUser();
+    if (user?.role !== "ADMIN") {
+      return { path: "/" };
+    }
   }
 });
 

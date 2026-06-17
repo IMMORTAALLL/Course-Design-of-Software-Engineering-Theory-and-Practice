@@ -8,6 +8,7 @@ const route = useRoute();
 const router = useRouter();
 const keyword = ref("");
 const isAdminRoute = computed(() => route.path.startsWith("/admin"));
+const isAdminUser = computed(() => authState.user?.role === "ADMIN");
 
 onMounted(() => {
   loadCurrentUser();
@@ -47,7 +48,7 @@ async function submitLogout() {
         <RouterLink to="/groups">群组</RouterLink>
         <RouterLink v-if="isAuthenticated" to="/feed/following">关注</RouterLink>
         <RouterLink to="/posts/create">发帖</RouterLink>
-        <RouterLink to="/admin">后台</RouterLink>
+        <RouterLink v-if="isAdminUser" to="/admin">后台</RouterLink>
         <template v-if="isAuthenticated">
           <RouterLink to="/me/notifications">通知</RouterLink>
           <RouterLink to="/me">{{ authState.user?.nickname || "个人中心" }}</RouterLink>
