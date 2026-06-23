@@ -15,13 +15,15 @@ import {
 } from "@/modules/interaction/api/interactionApi";
 import { hasAuthToken } from "@/modules/auth/stores/authStore";
 import type { CommentItem, InteractionStatus } from "@/modules/interaction/types/interaction";
-import { fetchPost } from "../api/forumApi";
+import { fetchPost, fetchPostAttachments, fetchPostPoll, votePollOption } from "../api/forumApi";
 import TagBadge from "../components/TagBadge.vue";
-import type { PostDetail } from "../types/forum";
+import type { AttachmentItem, PollOptionItem, PostDetail } from "../types/forum";
 
 const route = useRoute();
 const postId = computed(() => Number(route.params.id));
 const post = ref<PostDetail | null>(null);
+const attachments = ref<AttachmentItem[]>([]);
+const pollOptions = ref<PollOptionItem[]>([]);
 const comments = ref<CommentItem[]>([]);
 const loading = ref(true);
 const commentError = ref("");
@@ -29,6 +31,7 @@ const reportReason = ref("");
 const reportMessage = ref("");
 const reportError = ref("");
 const reporting = ref(false);
+const pollError = ref("");
 const interactionStatus = ref<InteractionStatus>({
   liked: false,
   favorited: false,
@@ -55,6 +58,12 @@ async function loadPost() {
     ]);
     post.value = postData;
     comments.value = commentData;
+    const [attachmentData, pollData] = await Promise.all([
+      fetchPostAttachments(postId.value),
+      fetchPostPoll(postId.value)
+    ]);
+    attachments.value = attachmentData;
+    pollOptions.value = pollData;
     if (hasAuthToken()) {
       try {
         interactionStatus.value = await fetchPostInteractionStatus(postId.value);
@@ -64,6 +73,16 @@ async function loadPost() {
     }
   } finally {
     loading.value = false;
+  }
+}
+
+async function submitVote(optionId: number) {
+  pollError.value = "";
+  try {
+    const result = await votePollOption(optionId);
+    pollOptions.value = result.options;
+  } catch (error) {
+    pollError.value = error instanceof Error ? error.message : "Vote failed";
   }
 }
 
@@ -128,6 +147,26 @@ watch(postId, loadPost);
         </div>
         <div class="risk">内容仅供交流，不构成投资建议。请结合自身风险承受能力独立判断。</div>
         <p class="content">{{ post.content }}</p>
+        <div v-if="attachments.length" class="sub-panel">
+          <h2>Attachments</h2>
+          <a v-for="item in attachments" :key="item.id" :href="item.fileUrl" target="_blank" rel="noreferrer">
+            {{ item.fileType }} · {{ item.fileUrl }}
+          </a>
+        </div>
+        <div v-if="pollOptions.length" class="sub-panel poll-panel">
+          <h2>Poll</h2>
+          <button
+            v-for="option in pollOptions"
+            :key="option.id"
+            class="poll-option"
+            type="button"
+            @click="submitVote(option.id)"
+          >
+            <span>{{ option.optionText }}</span>
+            <strong>{{ option.voteCount }}</strong>
+          </button>
+          <p v-if="pollError" class="inline-error">{{ pollError }}</p>
+        </div>
       </div>
 
       <div class="panel action-panel">
@@ -194,6 +233,42 @@ h1 {
   font-size: 16px;
   line-height: 1.9;
   white-space: pre-wrap;
+}
+
+.sub-panel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.sub-panel h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.sub-panel a {
+  color: var(--green);
+  overflow-wrap: anywhere;
+}
+
+.poll-panel {
+  grid-template-columns: 1fr;
+}
+
+.poll-option {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: #f8fbf9;
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 .action-panel,

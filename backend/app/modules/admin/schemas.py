@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -44,7 +47,7 @@ class SensitiveWordOut(BaseModel):
     risk_level: str
     action: str
     enabled: bool
-    note: str | None = None
+    note: Optional[str] = None
     created_at: datetime
 
     class Config:
@@ -76,5 +79,5 @@ class UserModerationRecordOut(BaseModel):
 
 
 class AdminStatistics(BaseModel):
-    hot_topics: list[str]
-    active_sections: list[dict[str, int | str]]
+    hot_topics: List[str]
+    active_sections: List[Dict[str, Union[int, str]]]

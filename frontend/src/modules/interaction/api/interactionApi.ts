@@ -6,9 +6,13 @@ import type {
   FollowingFeedPage,
   GroupCreatePayload,
   GroupItem,
+  GroupPostItem,
+  GroupResourceItem,
   InteractionStatus,
   NotificationItem,
+  PrivateMessageItem,
   ReportResult,
+  StarFollowResult,
   ToggleResult,
   UserBrief
 } from "../types/interaction";
@@ -61,6 +65,12 @@ export function toggleFollow(userId: number) {
   return request.post<FollowResult>(`/users/${userId}/follow`);
 }
 
+export function setStarredFollow(userId: number, starred: boolean) {
+  return request.put<StarFollowResult>(`/users/${userId}/follow/star`, undefined, {
+    params: { starred }
+  });
+}
+
 export function fetchFollowers(userId: number) {
   return request.get<UserBrief[]>(`/users/${userId}/followers`);
 }
@@ -81,6 +91,14 @@ export function markNotificationRead(id: number) {
   return request.put<NotificationItem>(`/me/notifications/${id}/read`);
 }
 
+export function fetchMessages() {
+  return request.get<PrivateMessageItem[]>("/me/messages");
+}
+
+export function sendMessage(userId: number, content: string) {
+  return request.post<PrivateMessageItem>(`/users/${userId}/messages`, { content });
+}
+
 export function fetchGroups() {
   return request.get<GroupItem[]>("/groups");
 }
@@ -91,6 +109,25 @@ export function createGroup(payload: GroupCreatePayload) {
 
 export function fetchGroup(id: number) {
   return request.get<GroupItem>(`/groups/${id}`);
+}
+
+export function fetchGroupPosts(id: number) {
+  return request.get<GroupPostItem[]>(`/groups/${id}/posts`);
+}
+
+export function createGroupPost(id: number, content: string) {
+  return request.post<GroupPostItem>(`/groups/${id}/posts`, { content });
+}
+
+export function fetchGroupResources(id: number) {
+  return request.get<GroupResourceItem[]>(`/groups/${id}/resources`);
+}
+
+export function createGroupResource(
+  id: number,
+  payload: { title: string; resourceUrl: string; description?: string }
+) {
+  return request.post<GroupResourceItem>(`/groups/${id}/resources`, payload);
 }
 
 export function joinGroup(id: number) {

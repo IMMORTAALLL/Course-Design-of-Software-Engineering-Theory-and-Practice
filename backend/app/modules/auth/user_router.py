@@ -1,3 +1,6 @@
+import json
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -11,23 +14,72 @@ from app.modules.auth.user_schemas import ProfileUpdateRequest, UserPublicProfil
 router = APIRouter(prefix="/api/users", tags=["User"])
 
 
+def _loads_list(value: Optional[str]) -> List[str]:
+    if not value:
+        return []
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return parsed if isinstance(parsed, list) else []
+
+
+def _dumps_list(value: Optional[List[str]]) -> Optional[str]:
+    if value is None:
+        return None
+    return json.dumps([item for item in value if item], ensure_ascii=False)
+
+
+def _profile_payload(profile: Optional[UserProfile], public: bool = False) -> dict:
+    if not profile:
+        return {
+            "nickname": None,
+            "avatarUrl": None,
+            "bio": None,
+            "authLevel": 0,
+            "riskPreference": None,
+            "influenceScore": 0,
+            "experienceTags": [],
+            "interestMarkets": [],
+            "privacyLevel": 0,
+            "postCount": 0,
+            "eliteCount": 0,
+            "points": 0,
+            "level": 1,
+            "badgeTitle": None,
+        }
+    hidden = public and profile.privacy_level == 2
+    return {
+        "nickname": profile.nickname,
+        "avatarUrl": profile.avatar_url,
+        "bio": None if hidden else profile.bio,
+        "authLevel": profile.auth_level,
+        "riskPreference": None if public else profile.risk_preference,
+        "influenceScore": profile.influence_score,
+        "experienceTags": [] if hidden else _loads_list(profile.experience_tags),
+        "interestMarkets": [] if hidden else _loads_list(profile.interest_markets),
+        "privacyLevel": profile.privacy_level,
+        "postCount": profile.post_count,
+        "eliteCount": profile.elite_count,
+        "points": profile.points,
+        "level": profile.level,
+        "badgeTitle": profile.badge_title,
+    }
+
+
 @router.get("/me")
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     profile = current_user.profile
     role_name = current_user.roles[0].name if current_user.roles else "USER"
-    return success({
+    data = {
         "id": current_user.id,
         "phone": current_user.phone,
         "email": current_user.email,
-        "nickname": profile.nickname if profile else None,
-        "avatarUrl": profile.avatar_url if profile else None,
-        "bio": profile.bio if profile else None,
-        "authLevel": profile.auth_level if profile else 0,
-        "riskPreference": profile.risk_preference if profile else None,
-        "influenceScore": profile.influence_score if profile else 0,
         "role": role_name,
         "status": current_user.status,
-    })
+    }
+    data.update(_profile_payload(profile))
+    return success(data)
 
 
 @router.put("/me/profile")
@@ -49,6 +101,12 @@ def update_profile(
         profile.bio = req.bio
     if req.risk_preference is not None:
         profile.risk_preference = req.risk_preference
+    if req.experience_tags is not None:
+        profile.experience_tags = _dumps_list(req.experience_tags)
+    if req.interest_markets is not None:
+        profile.interest_markets = _dumps_list(req.interest_markets)
+    if req.privacy_level is not None:
+        profile.privacy_level = req.privacy_level
 
     db.commit()
     return success(message="修改成功")
@@ -75,6 +133,8 @@ def search_users(
             "nickname": p.nickname if p else None,
             "avatarUrl": p.avatar_url if p else None,
             "authLevel": p.auth_level if p else 0,
+            "level": p.level if p else 1,
+            "badgeTitle": p.badge_title if p else None,
         })
 
     return paginated(items, page, size, total)
@@ -87,11 +147,6 @@ def get_user_public_profile(user_id: int, db: Session = Depends(get_db)):
         raise ResourceNotFoundError("用户不存在")
 
     profile = user.profile
-    return success({
-        "id": user.id,
-        "nickname": profile.nickname if profile else None,
-        "avatarUrl": profile.avatar_url if profile else None,
-        "bio": profile.bio if profile else None,
-        "authLevel": profile.auth_level if profile else 0,
-        "influenceScore": profile.influence_score if profile else 0,
-    })
+    data = {"id": user.id}
+    data.update(_profile_payload(profile, public=True))
+    return success(data)

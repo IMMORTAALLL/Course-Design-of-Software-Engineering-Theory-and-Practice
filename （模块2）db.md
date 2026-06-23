@@ -648,3 +648,25 @@ backend/forum_system.db
 | `report_items` | `/api/admin/reports` | `/admin/reports` |
 | `sensitive_words` | `/api/admin/sensitive-words` | `/admin/sensitive-words` |
 | `user_moderation_records` | `/api/admin/user-moderation` | `/admin/users` |
+
+## 6. 2026.6.22 实现对齐补充
+
+当前代码和 `database/schema.sql` 已补齐以下数据库结构，作为最新实现口径：
+
+| 表或字段 | 类型 | 用途 |
+| --- | --- | --- |
+| `user_profiles.experience_tags` | VARCHAR(255) | JSON 字符串形式保存投资经验标签 |
+| `user_profiles.interest_markets` | VARCHAR(255) | JSON 字符串形式保存关注市场 |
+| `user_profiles.privacy_level` | TINYINT | 公开资料隐私级别 |
+| `user_profiles.post_count` | INT | 用户发帖数 |
+| `user_profiles.elite_count` | INT | 用户加精帖数 |
+| `user_profiles.points` | INT | 用户积分 |
+| `user_profiles.level` | INT | 用户等级 |
+| `user_profiles.badge_title` | VARCHAR(50) | 成就徽章 |
+| `poll_options` | table | 帖子投票选项 |
+| `poll_votes` | table | 用户投票记录，同一帖子每个用户只保留一个选项 |
+| `private_messages` | table | 站内私信 |
+| `group_posts` | table | 群组内讨论 |
+| `group_resources` | table | 群组资源分享 |
+
+SQLite 本地演示库由 `backend/app/main.py` 的 `ensure_sqlite_demo_schema()` 进行轻量补齐；全量 MySQL 建表以 `database/schema.sql` 为准。

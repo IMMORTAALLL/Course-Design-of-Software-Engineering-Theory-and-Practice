@@ -1,5 +1,16 @@
 import request from "@/shared/api/request";
-import type { PageResult, PostCreatePayload, PostDetail, PostListItem, Section, Tag } from "../types/forum";
+import type {
+  AttachmentItem,
+  HotTopic,
+  PageResult,
+  PollOptionItem,
+  PostCreatePayload,
+  PostDetail,
+  PostListItem,
+  SearchSuggestion,
+  Section,
+  Tag
+} from "../types/forum";
 
 export function fetchSections() {
   return request.get<Section[]>("/sections");
@@ -12,6 +23,9 @@ export function fetchSection(id: number) {
 export function fetchPosts(params?: {
   section_id?: number;
   keyword?: string;
+  tag_id?: number;
+  is_elite?: number;
+  sort?: "latest" | "hot";
   page?: number;
   size?: number;
 }) {
@@ -42,4 +56,34 @@ export function searchPosts(keyword: string, page = 1, size = 10) {
 
 export function fetchHotPosts(limit = 10) {
   return request.get<PostListItem[]>("/posts/hot", { params: { limit } });
+}
+
+export function fetchHotTopics(period: "daily" | "weekly" = "daily", limit = 10) {
+  return request.get<HotTopic[]>("/hot-topics", { params: { period, limit } });
+}
+
+export function fetchSearchSuggestions(keyword: string, limit = 8) {
+  return request.get<SearchSuggestion[]>("/search/suggestions", { params: { keyword, limit } });
+}
+
+export function fetchPostAttachments(postId: number) {
+  return request.get<AttachmentItem[]>(`/posts/${postId}/attachments`);
+}
+
+export function addPostAttachment(postId: number, payload: { fileUrl: string; fileType: string }) {
+  return request.post<AttachmentItem>(`/posts/${postId}/attachments`, payload);
+}
+
+export function fetchPostPoll(postId: number) {
+  return request.get<PollOptionItem[]>(`/posts/${postId}/poll`);
+}
+
+export function addPostPollOption(postId: number, optionText: string) {
+  return request.post<PollOptionItem>(`/posts/${postId}/poll-options`, { optionText });
+}
+
+export function votePollOption(optionId: number) {
+  return request.post<{ postId: number; selectedOptionId: number; options: PollOptionItem[] }>(
+    `/poll-options/${optionId}/vote`
+  );
 }

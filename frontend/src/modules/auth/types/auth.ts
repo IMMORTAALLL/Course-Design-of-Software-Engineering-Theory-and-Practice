@@ -16,6 +16,14 @@ export interface CurrentUser extends UserBrief {
   bio?: string | null;
   riskPreference?: number | null;
   influenceScore: number;
+  experienceTags: string[];
+  interestMarkets: string[];
+  privacyLevel: number;
+  postCount: number;
+  eliteCount: number;
+  points: number;
+  level: number;
+  badgeTitle?: string | null;
 }
 
 export interface PublicUser {
@@ -25,6 +33,14 @@ export interface PublicUser {
   bio?: string | null;
   authLevel: number;
   influenceScore: number;
+  experienceTags: string[];
+  interestMarkets: string[];
+  privacyLevel: number;
+  postCount: number;
+  eliteCount: number;
+  points: number;
+  level: number;
+  badgeTitle?: string | null;
 }
 
 export interface RegisterPayload {
@@ -56,6 +72,9 @@ export interface ProfileUpdatePayload {
   avatarUrl?: string;
   bio?: string;
   riskPreference?: number;
+  experienceTags?: string[];
+  interestMarkets?: string[];
+  privacyLevel?: number;
 }
 
 export interface CertificationPayload {

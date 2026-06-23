@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 
-import { fetchHotPosts } from "../api/forumApi";
+import { fetchHotPosts, fetchHotTopics } from "../api/forumApi";
 import PostCard from "../components/PostCard.vue";
-import type { PostListItem } from "../types/forum";
+import type { HotTopic, PostListItem } from "../types/forum";
 
 const posts = ref<PostListItem[]>([]);
+const topics = ref<HotTopic[]>([]);
 const loading = ref(true);
 
 onMounted(async () => {
   try {
-    posts.value = await fetchHotPosts(20);
+    const [postData, topicData] = await Promise.all([fetchHotPosts(20), fetchHotTopics("weekly", 12)]);
+    posts.value = postData;
+    topics.value = topicData;
   } finally {
     loading.value = false;
   }
@@ -31,5 +34,42 @@ onMounted(async () => {
     <div v-else class="stack">
       <PostCard v-for="(post, index) in posts" :key="post.id" :post="post" :rank="index + 1" />
     </div>
+    <section v-if="!loading && topics.length" class="panel topic-grid">
+      <RouterLink
+        v-for="topic in topics"
+        :key="topic.id"
+        class="topic-chip"
+        :to="`/search?keyword=${encodeURIComponent(topic.name)}`"
+      >
+        <span>{{ topic.name }}</span>
+        <small>{{ topic.postCount }} posts · {{ topic.hotScore }}</small>
+      </RouterLink>
+    </section>
   </section>
 </template>
+
+<style scoped>
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.topic-chip {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.topic-chip span {
+  font-weight: 800;
+}
+
+.topic-chip small {
+  color: var(--muted);
+}
+</style>

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -7,12 +11,19 @@ from app.modules.auth.models import User
 from app.security.jwt import decode_access_token
 from app.modules.interaction import service
 from app.modules.interaction.models import Comment
-from app.modules.interaction.schemas import CommentCreate, GroupCreate, ReportCreate
+from app.modules.interaction.schemas import (
+    CommentCreate,
+    GroupCreate,
+    GroupPostCreate,
+    GroupResourceCreate,
+    PrivateMessageCreate,
+    ReportCreate,
+)
 
 router = APIRouter(prefix="/api", tags=["interaction"])
 
 
-def get_optional_user_id(token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> int | None:
+def get_optional_user_id(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Optional[int]:
     if not token:
         return None
     payload = decode_access_token(token)
@@ -144,6 +155,16 @@ def toggle_user_follow(
     return success(service.toggle_follow(db, user_id, current_user))
 
 
+@router.put("/users/{user_id}/follow/star")
+def set_starred_follow(
+    user_id: int,
+    starred: bool = Query(True),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.set_starred_follow(db, user_id, current_user, starred))
+
+
 @router.get("/users/{user_id}/followers")
 def list_user_followers(user_id: int, db: Session = Depends(get_db)):
     return success(service.list_followers(db, user_id))
@@ -182,9 +203,27 @@ def mark_notification_read(
     return success(service.mark_notification_read(db, notification_id, current_user), "通知已标记为已读")
 
 
+@router.get("/me/messages")
+def list_my_messages(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.list_private_messages(db, current_user))
+
+
+@router.post("/users/{user_id}/messages")
+def send_user_message(
+    user_id: int,
+    payload: PrivateMessageCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.send_private_message(db, user_id, current_user, payload.content), "Message sent")
+
+
 @router.get("/groups")
 def list_groups(
-    current_user_id: int | None = Depends(get_optional_user_id),
+    current_user_id: Optional[int] = Depends(get_optional_user_id),
     db: Session = Depends(get_db),
 ):
     return success(service.list_groups(db, current_user_id))
@@ -205,10 +244,58 @@ def create_group(
 @router.get("/groups/{group_id}")
 def get_group(
     group_id: int,
-    current_user_id: int | None = Depends(get_optional_user_id),
+    current_user_id: Optional[int] = Depends(get_optional_user_id),
     db: Session = Depends(get_db),
 ):
     return success(service.get_group(db, group_id, current_user_id))
+
+
+@router.get("/groups/{group_id}/posts")
+def list_group_posts(
+    group_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.list_group_posts(db, group_id, current_user))
+
+
+@router.post("/groups/{group_id}/posts")
+def create_group_post(
+    group_id: int,
+    payload: GroupPostCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.create_group_post(db, group_id, current_user, payload.content), "Group post created")
+
+
+@router.get("/groups/{group_id}/resources")
+def list_group_resources(
+    group_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(service.list_group_resources(db, group_id, current_user))
+
+
+@router.post("/groups/{group_id}/resources")
+def create_group_resource(
+    group_id: int,
+    payload: GroupResourceCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(
+        service.create_group_resource(
+            db,
+            group_id,
+            current_user,
+            payload.title,
+            payload.resource_url,
+            payload.description,
+        ),
+        "Group resource created",
+    )
 
 
 @router.post("/groups/{group_id}/join")

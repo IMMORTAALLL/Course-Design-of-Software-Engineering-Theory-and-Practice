@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -8,10 +12,14 @@ from app.database import get_db
 from app.modules.auth.models import User
 from app.modules.forum import crud
 from app.modules.forum.schemas import (
+    AttachmentCreate,
+    PollOptionCreate,
     PostCreate,
     PostUpdate,
     SectionCreate,
+    SectionUpdate,
     TagCreate,
+    TagUpdate,
 )
 
 router = APIRouter(prefix="/api", tags=["forum"])
@@ -47,6 +55,27 @@ def admin_create_section(
     return success(crud.section_to_read(section), "板块创建成功")
 
 
+@router.put("/admin/sections/{section_id}")
+def admin_update_section(
+    section_id: int,
+    payload: SectionUpdate,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    section = crud.update_section(db, section_id, payload)
+    return success(crud.section_to_read(section), "Section updated")
+
+
+@router.delete("/admin/sections/{section_id}")
+def admin_delete_section(
+    section_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    section = crud.delete_section(db, section_id)
+    return success({"id": section.id, "isActive": section.is_active}, "Section disabled")
+
+
 @router.get("/sections/{section_id}")
 def get_section(section_id: int, db: Session = Depends(get_db)):
     return success(crud.section_to_read(crud.get_section(db, section_id)))
@@ -58,15 +87,36 @@ def list_hot_posts(limit: int = Query(10, ge=1, le=50), db: Session = Depends(ge
     return success(posts)
 
 
+@router.get("/hot-topics")
+def list_hot_topics(
+    period: str = Query("daily", pattern="^(daily|weekly)$"),
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    return success(crud.list_hot_topics(db, period=period, limit=limit))
+
+
 @router.get("/posts")
 def list_posts(
-    section_id: int | None = None,
-    keyword: str | None = None,
+    section_id: Optional[int] = None,
+    keyword: Optional[str] = None,
+    tag_id: Optional[int] = None,
+    is_elite: Optional[int] = None,
+    sort: str = Query("latest", pattern="^(latest|hot)$"),
     page: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
 ):
-    posts, total = crud.list_posts(db, section_id=section_id, keyword=keyword, page=page, size=size)
+    posts, total = crud.list_posts(
+        db,
+        section_id=section_id,
+        keyword=keyword,
+        tag_id=tag_id,
+        is_elite=is_elite,
+        sort=sort,
+        page=page,
+        size=size,
+    )
     return paginated([crud.post_to_item(post) for post in posts], page, size, total)
 
 
@@ -126,8 +176,49 @@ def delete_post(
     return success({"id": post.id, "status": post.status}, "帖子已删除")
 
 
+@router.get("/posts/{post_id}/attachments")
+def list_post_attachments(post_id: int, db: Session = Depends(get_db)):
+    return success([crud.attachment_to_read(item) for item in crud.list_attachments(db, post_id)])
+
+
+@router.post("/posts/{post_id}/attachments")
+def add_post_attachment(
+    post_id: int,
+    payload: AttachmentCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    item = crud.add_attachment(db, post_id, payload, current_user.id)
+    return success(crud.attachment_to_read(item), "Attachment added")
+
+
+@router.get("/posts/{post_id}/poll")
+def list_post_poll(post_id: int, db: Session = Depends(get_db)):
+    return success([crud.poll_option_to_read(item) for item in crud.list_poll_options(db, post_id)])
+
+
+@router.post("/posts/{post_id}/poll-options")
+def add_post_poll_option(
+    post_id: int,
+    payload: PollOptionCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    item = crud.add_poll_option(db, post_id, payload, current_user.id)
+    return success(crud.poll_option_to_read(item), "Poll option added")
+
+
+@router.post("/poll-options/{option_id}/vote")
+def vote_poll_option(
+    option_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return success(crud.vote_poll_option(db, option_id, current_user.id), "Vote recorded")
+
+
 @router.get("/tags")
-def list_tags(tag_type: str | None = None, db: Session = Depends(get_db)):
+def list_tags(tag_type: Optional[str] = None, db: Session = Depends(get_db)):
     return success([crud.tag_to_read(tag) for tag in crud.list_tags(db, tag_type=tag_type)])
 
 
@@ -151,6 +242,26 @@ def admin_create_tag(
     return success(crud.tag_to_read(tag), "标签创建成功")
 
 
+@router.put("/admin/tags/{tag_id}")
+def admin_update_tag(
+    tag_id: int,
+    payload: TagUpdate,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    tag = crud.update_tag(db, tag_id, payload)
+    return success(crud.tag_to_read(tag), "Tag updated")
+
+
+@router.delete("/admin/tags/{tag_id}")
+def admin_delete_tag(
+    tag_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    return success(crud.delete_tag(db, tag_id), "Tag deleted")
+
+
 @router.get("/search/posts")
 def search_posts(
     keyword: str = Query(..., min_length=1),
@@ -160,3 +271,12 @@ def search_posts(
 ):
     posts, total = crud.search_posts(db, keyword=keyword, page=page, size=size)
     return paginated([crud.post_to_item(post) for post in posts], page, size, total)
+
+
+@router.get("/search/suggestions")
+def search_suggestions(
+    keyword: str = Query(..., min_length=1),
+    limit: int = Query(8, ge=1, le=20),
+    db: Session = Depends(get_db),
+):
+    return success(crud.search_suggestions(db, keyword=keyword, limit=limit))

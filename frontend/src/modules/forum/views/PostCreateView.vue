@@ -1,8 +1,8 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
-import { createAnalysisPost, createPost, fetchSections, fetchTags } from "../api/forumApi";
+import { addPostPollOption, createAnalysisPost, createPost, fetchSections, fetchTags } from "../api/forumApi";
 import type { Section, Tag } from "../types/forum";
 
 const router = useRouter();
@@ -11,7 +11,8 @@ const tags = ref<Tag[]>([]);
 const sectionId = ref<number | null>(null);
 const title = ref("");
 const content = ref("");
-const postMode = ref<"normal" | "analysis">("normal");
+const postMode = ref<"normal" | "analysis" | "poll" | "short">("normal");
+const pollOptionsText = ref("");
 const selectedTags = ref<number[]>([]);
 const saving = ref(false);
 const errorMessage = ref("");
@@ -31,13 +32,28 @@ async function submitPost() {
   saving.value = true;
   errorMessage.value = "";
   try {
+    const postTypeMap = {
+      normal: 1,
+      analysis: 2,
+      poll: 3,
+      short: 4
+    };
     const payload = {
       section_id: sectionId.value,
       title: title.value.trim(),
       content: content.value.trim(),
+      post_type: postTypeMap[postMode.value],
       tag_ids: selectedTags.value
     };
     const post = postMode.value === "analysis" ? await createAnalysisPost(payload) : await createPost(payload);
+    if (postMode.value === "poll") {
+      const options = pollOptionsText.value
+        .split("\n")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .slice(0, 8);
+      await Promise.all(options.map((option) => addPostPollOption(post.id, option)));
+    }
     router.push(`/posts/${post.id}`);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : "发布失败";
@@ -74,6 +90,8 @@ async function submitPost() {
       <div class="field">
         <label>内容类型</label>
         <select v-model="postMode">
+          <option value="poll">Poll</option>
+          <option value="short">Short update</option>
           <option value="normal">普通帖子</option>
           <option value="analysis">长文分析</option>
         </select>
@@ -92,6 +110,11 @@ async function submitPost() {
             <span>{{ tag.name }} · {{ tag.tag_type }}</span>
           </label>
         </div>
+      </div>
+
+      <div v-if="postMode === 'poll'" class="field">
+        <label>鎶曠エ閫夐」</label>
+        <textarea v-model="pollOptionsText" placeholder="姣忚涓€涓€夐」锛屾渶澶?8 椤?"></textarea>
       </div>
 
       <p v-if="errorMessage" class="error">{{ errorMessage }}</p>

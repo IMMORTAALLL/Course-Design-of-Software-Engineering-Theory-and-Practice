@@ -34,6 +34,14 @@ class UserProfile(Base):
     auth_level: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
     risk_preference: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
     influence_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    experience_tags: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    interest_markets: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    privacy_level: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    post_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    elite_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    points: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    level: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    badge_title: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="profile")
 

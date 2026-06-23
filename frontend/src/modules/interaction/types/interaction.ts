@@ -40,6 +40,9 @@ export interface UserBrief {
   avatarUrl?: string | null;
   authLevel: number;
   influenceScore: number;
+  level?: number;
+  badgeTitle?: string | null;
+  isStarred?: boolean;
 }
 
 export interface NotificationItem {
@@ -70,6 +73,42 @@ export interface GroupCreatePayload {
   name: string;
   description?: string;
   permission: 1 | 2 | 3;
+}
+
+export interface StarFollowResult {
+  following: boolean;
+  starred: boolean;
+}
+
+export interface PrivateMessageItem {
+  id: number;
+  senderId: number;
+  senderNickname: string;
+  receiverId: number;
+  receiverNickname: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface GroupPostItem {
+  id: number;
+  groupId: number;
+  userId: number;
+  authorNickname: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface GroupResourceItem {
+  id: number;
+  groupId: number;
+  userId: number;
+  authorNickname: string;
+  title: string;
+  resourceUrl: string;
+  description?: string | null;
+  createdAt: string;
 }
 
 export type FavoritePage = PageResult<PostListItem>;

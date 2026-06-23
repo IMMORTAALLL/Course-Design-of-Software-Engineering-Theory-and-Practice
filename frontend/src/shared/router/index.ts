@@ -23,6 +23,7 @@ import FavoritesView from "@/modules/interaction/views/FavoritesView.vue";
 import FollowingFeedView from "@/modules/interaction/views/FollowingFeedView.vue";
 import GroupDetailView from "@/modules/interaction/views/GroupDetailView.vue";
 import GroupListView from "@/modules/interaction/views/GroupListView.vue";
+import MessagesView from "@/modules/interaction/views/MessagesView.vue";
 import NotificationsView from "@/modules/interaction/views/NotificationsView.vue";
 import { authState, hasAuthToken, loadCurrentUser } from "@/modules/auth/stores/authStore";
 
@@ -36,6 +37,7 @@ const router = createRouter({
     { path: "/me/certification", name: "certification", component: CertificationView, meta: { requiresAuth: true } },
     { path: "/me/risk-assessment", name: "risk-assessment", component: RiskAssessmentView, meta: { requiresAuth: true } },
     { path: "/me/notifications", name: "notifications", component: NotificationsView, meta: { requiresAuth: true } },
+    { path: "/me/messages", name: "messages", component: MessagesView, meta: { requiresAuth: true } },
     { path: "/me/favorites", name: "favorites", component: FavoritesView, meta: { requiresAuth: true } },
     { path: "/feed/following", name: "following-feed", component: FollowingFeedView, meta: { requiresAuth: true } },
     { path: "/users/:id", name: "user-public", component: UserPublicView },

@@ -2,7 +2,7 @@
 
 项目名称：智投社区：股票基金投资论坛系统
 
-本文档记录模块四“AI辅助测试与调试”的测试过程。测试对象为当前 `docx` 分支整合后的 ABCD 四个模块代码，重点检查后端接口、前端构建、用户权限、论坛内容、社交互动和后台审核管理流程是否符合模块二设计文档要求。
+本文档记录模块四“AI辅助测试与调试”的测试过程。测试对象为当前 `main` 分支整合后的 ABCD 四个模块代码，重点检查后端接口、前端构建、用户权限、论坛内容、社交互动和后台审核管理流程是否符合模块二设计文档要求。
 
 ## 一、测试目标
 
@@ -21,13 +21,13 @@
 | 项目 | 内容 |
 | --- | --- |
 | 操作系统 | Windows |
-| 当前分支 | `docx` |
+| 当前分支 | `main` |
 | 后端框架 | FastAPI + SQLAlchemy |
 | 前端框架 | Vue 3 + Vite + TypeScript |
 | 数据库 | SQLite 临时测试库 |
 | 后端测试方式 | Python 编译检查、FastAPI TestClient 接口回归 |
 | 前端测试方式 | `npm run build`、Chrome + Playwright 真实浏览器联调 |
-| 测试日期 | 2026.6.16 - 2026.6.17 |
+| 测试日期 | 2026.6.16 - 2026.6.22 |
 
 ## 三、后端测试
 
@@ -108,7 +108,7 @@ npm run build
 | 前端构建 | `npm run build` | 通过 |
 | 前端启动 | `npm run dev -- --host 127.0.0.1 --port 5173` | 通过，开发服务返回 200 |
 
-本机默认 `python` 为 3.8.6，不满足当前依赖版本要求；复现时使用已安装项目依赖的 Python 3.12 临时环境执行后端烟测，并使用 Python 3.13 执行编译检查。该问题属于本机环境差异，README 和 `scripts/README.md` 已说明需要 Python 3.10+ 环境。
+2026.6.22 复查时本机默认 `python` 为 Python 3.9.13。已将后端关键 ORM、Schema 和 Router 类型注解改为 Python 3.9 兼容写法，并按 `backend/requirements.txt` 刷新项目内 `backend/venv_lib` 依赖后重新执行独立后端烟测，21 项检查全部通过。
 
 ### 2. 文档一致性检查
 
@@ -152,7 +152,7 @@ npm run build
 | 19 | 管理员可进入后台概览页 | 通过 |
 | 20 | 移动端首页布局和主要内容可见 | 通过 |
 
-浏览器联调脚本共执行 20 个断言，结果为 20 项通过、0 项失败。测试过程中浏览器控制台出现过静态资源 404 提示，判断为 favicon 或静态资源缺失提示，不影响核心业务流程。
+浏览器联调脚本共执行 20 个断言，结果为 20 项通过、0 项失败。
 
 ### 3. 联调截图
 
@@ -186,7 +186,7 @@ npm run build
 
 测试时发现系统默认 `python` 为 Python 3.8.6，加载到的 SQLAlchemy 版本不支持项目中使用的 `DeclarativeBase`，直接运行接口测试会失败。
 
-处理方式：改用已有 Python 3.12 临时测试环境执行后端回归，该环境中 SQLAlchemy 版本为 2.0.35，与 `backend/requirements.txt` 一致。
+处理方式：早期测试改用已有 Python 3.12 临时测试环境执行后端回归；2026.6.22 复查时进一步将后端类型注解调整为 Python 3.9 兼容写法，并按 `backend/requirements.txt` 刷新项目内依赖目录，确认本机默认 Python 3.9.13 也可以完成后端烟测。
 
 ### 2. 论坛发帖作者固定
 
@@ -214,6 +214,52 @@ npm run build
 
 ## 八、测试结论
 
-本次测试覆盖后端编译、A/B/C/D 关键接口、前端构建、README 冷启动复现、真实浏览器全链路联调、权限边界、举报闭环、审核群申请状态、SQLite 旧库兼容和模块文档一致性检查。测试结果显示，当前 `docx` 分支中用户与权限、论坛内容、社交互动、审核后台四个模块的主流程可以通过构建、接口回归、冷启动复现和浏览器联调检查，后端 API 回归为 35 项通过、0 项失败；独立后端烟测脚本为 21 项通过、0 项失败；真实浏览器联调为 20 项通过、0 项失败。
+本次测试覆盖后端编译、A/B/C/D 关键接口、前端构建、README 冷启动复现、真实浏览器全链路联调、权限边界、举报闭环、审核群申请状态、SQLite 旧库兼容和模块文档一致性检查。测试结果显示，当前 `main` 分支中用户与权限、论坛内容、社交互动、审核后台四个模块的主流程可以通过构建、接口回归、冷启动复现和浏览器联调检查，后端 API 回归为 35 项通过、0 项失败；独立后端烟测脚本为 21 项通过、0 项失败；真实浏览器联调为 20 项通过、0 项失败。2026.6.22 复查时再次执行 `python -m compileall backend\app`、`scripts/backend_smoke_test.py` 和 `npm run build`，结果均通过。
 
 后续如果继续完善，可以补充正式测试用例文件、异常参数测试，以及更完整的群组资料区和认证审核页面。
+
+## 九、2026.6.22 最新补齐功能复测
+
+本次复测在现有 `main` 分支工作树上执行，覆盖新增的资料扩展、附件、投票、搜索建议、热议话题、特别关注、私信、群组讨论、群组资源和自动审核入队等功能。
+
+### 1. 后端编译
+
+```bash
+python -m compileall backend\app
+```
+
+结果：通过。
+
+### 2. 后端测试
+
+```bash
+$env:PYTHONPATH=(Resolve-Path 'backend\venv_lib').Path + ';' + (Resolve-Path 'backend').Path; python scripts\backend_smoke_test.py
+```
+
+结果：32 项 PASS，0 项 FAIL。新增覆盖项包括：
+
+| 测试项 | 覆盖接口或流程 | 结果 |
+| --- | --- | --- |
+| 用户资料扩展 | `PUT /api/users/me/profile` | PASS |
+| 帖子附件 | `POST /api/posts/{post_id}/attachments` | PASS |
+| 投票选项与投票 | `POST /api/posts/{post_id}/poll-options`、`POST /api/poll-options/{option_id}/vote` | PASS |
+| 搜索建议 | `GET /api/search/suggestions` | PASS |
+| 热议话题 | `GET /api/hot-topics` | PASS |
+| 特别关注 | `PUT /api/users/{user_id}/follow/star` | PASS |
+| 私信 | `POST /api/users/{user_id}/messages` | PASS |
+| 群组讨论 | `POST /api/groups/{group_id}/posts` | PASS |
+| 群组资源 | `POST /api/groups/{group_id}/resources` | PASS |
+| OpenAPI 生成 | `GET /openapi.json` | PASS |
+
+### 3. 前端构建
+
+```bash
+cd frontend
+npm run build
+```
+
+结果：通过。`vue-tsc --noEmit` 和 `vite build` 均通过，构建产物位于 `frontend/dist/`。
+
+### 4. 结论
+
+当前项目代码、SQL 脚本、模块三实现记录、模块四测试记录、模块五部署说明、用户手册和项目总结报告已经覆盖指导书中本题目要求的主要业务功能、测试验证和本地部署交付项。

@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+﻿<script setup lang="ts">
+import { computed, onMounted, ref, watch } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 
 import { updateProfile } from "../api/authApi";
@@ -12,9 +12,13 @@ const nickname = ref("");
 const avatarUrl = ref("");
 const bio = ref("");
 const riskPreference = ref<number | "">("");
+const experienceTags = ref("");
+const interestMarkets = ref("");
+const privacyLevel = ref<number>(0);
 const loading = ref(false);
 const message = ref("");
 const errorMessage = ref("");
+const currentUser = computed(() => authState.user as Partial<CurrentUser> | null);
 
 function fillForm() {
   const user = authState.user as Partial<CurrentUser> | null;
@@ -22,6 +26,9 @@ function fillForm() {
   avatarUrl.value = user?.avatarUrl ?? "";
   bio.value = user?.bio ?? "";
   riskPreference.value = user?.riskPreference ? user.riskPreference : "";
+  experienceTags.value = user?.experienceTags?.join(", ") ?? "";
+  interestMarkets.value = user?.interestMarkets?.join(", ") ?? "";
+  privacyLevel.value = user?.privacyLevel ?? 0;
 }
 
 onMounted(async () => {
@@ -42,7 +49,10 @@ async function saveProfile() {
       nickname: nickname.value.trim(),
       avatarUrl: avatarUrl.value.trim() || undefined,
       bio: bio.value.trim() || undefined,
-      riskPreference: riskPreference.value === "" ? undefined : Number(riskPreference.value)
+      riskPreference: riskPreference.value === "" ? undefined : Number(riskPreference.value),
+      experienceTags: experienceTags.value.split(",").map((item) => item.trim()).filter(Boolean),
+      interestMarkets: interestMarkets.value.split(",").map((item) => item.trim()).filter(Boolean),
+      privacyLevel: privacyLevel.value
     });
     await loadCurrentUser();
     message.value = "个人资料已更新。";
@@ -96,6 +106,25 @@ async function submitLogout() {
           </select>
         </div>
 
+        <div class="field">
+          <label>投资经验</label>
+          <input v-model="experienceTags" placeholder="例如：基金定投, A股, 量化" />
+        </div>
+
+        <div class="field">
+          <label>关注市场</label>
+          <input v-model="interestMarkets" placeholder="例如：沪深300, 港股, 美股" />
+        </div>
+
+        <div class="field">
+          <label>隐私设置</label>
+          <select v-model.number="privacyLevel">
+            <option :value="0">公开</option>
+            <option :value="1">部分隐藏</option>
+            <option :value="2">隐藏简介和标签</option>
+          </select>
+        </div>
+
         <p v-if="message" class="info">{{ message }}</p>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
 
@@ -109,14 +138,17 @@ async function submitLogout() {
           <h2>{{ authState.user?.nickname || "当前用户" }}</h2>
           <p class="muted">账号状态：{{ authState.user?.status === 0 ? "正常" : authState.user?.status === 1 ? "禁言" : "封禁" }}</p>
           <p class="muted">认证等级：{{ authState.user?.authLevel === 2 ? "专业认证" : authState.user?.authLevel === 1 ? "实名认证" : "基础用户" }}</p>
+          <p class="muted">等级：Lv.{{ currentUser?.level || 1 }} · 积分 {{ currentUser?.points || 0 }}</p>
+          <p class="muted">发帖 {{ currentUser?.postCount || 0 }} · 加精 {{ currentUser?.eliteCount || 0 }}</p>
         </div>
 
         <RouterLink class="action-link" to="/me/certification">认证申请</RouterLink>
         <RouterLink class="action-link" to="/me/risk-assessment">风险测评</RouterLink>
         <RouterLink class="action-link" to="/me/notifications">通知中心</RouterLink>
         <RouterLink class="action-link" to="/me/favorites">我的收藏</RouterLink>
-        <RouterLink class="action-link" to="/feed/following">关注动态</RouterLink>
-        <RouterLink class="action-link" to="/groups">投资群组</RouterLink>
+        <RouterLink class="action-link" to="/feed/following">Following Feed</RouterLink>
+        <RouterLink class="action-link" to="/me/messages">Private Messages</RouterLink>
+        <RouterLink class="action-link" to="/groups">Groups</RouterLink>
         <RouterLink v-if="authState.user?.id" class="action-link" :to="`/users/${authState.user.id}`">查看公开主页</RouterLink>
       </aside>
     </div>

@@ -3,7 +3,7 @@ import { onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import FollowButton from "@/modules/interaction/components/FollowButton.vue";
-import { fetchFollowers, fetchFollowing } from "@/modules/interaction/api/interactionApi";
+import { fetchFollowers, fetchFollowing, setStarredFollow } from "@/modules/interaction/api/interactionApi";
 import type { UserBrief } from "@/modules/interaction/types/interaction";
 import { fetchPublicUser } from "../api/authApi";
 import type { PublicUser } from "../types/auth";
@@ -14,6 +14,7 @@ const followers = ref<UserBrief[]>([]);
 const following = ref<UserBrief[]>([]);
 const loading = ref(true);
 const errorMessage = ref("");
+const starMessage = ref("");
 
 async function loadUser() {
   const id = Number(route.params.id);
@@ -41,6 +42,17 @@ async function loadUser() {
   }
 }
 
+async function submitStarredFollow() {
+  if (!user.value) return;
+  starMessage.value = "";
+  try {
+    await setStarredFollow(user.value.id, true);
+    starMessage.value = "Special follow enabled.";
+  } catch (error) {
+    starMessage.value = error instanceof Error ? error.message : "Special follow failed.";
+  }
+}
+
 onMounted(loadUser);
 watch(() => route.params.id, loadUser);
 </script>
@@ -65,7 +77,15 @@ watch(() => route.params.id, loadUser);
           <span>关注 {{ following.length }}</span>
         </div>
         <p class="bio">{{ user.bio || "这个用户还没有填写简介。" }}</p>
+        <div class="profile-tags">
+          <span>Lv.{{ user.level }}</span>
+          <span>{{ user.postCount }} posts</span>
+          <span v-for="item in user.experienceTags" :key="`exp-${item}`">{{ item }}</span>
+          <span v-for="item in user.interestMarkets" :key="`market-${item}`">{{ item }}</span>
+        </div>
         <FollowButton :user-id="user.id" />
+        <button class="secondary-button star-button" type="button" @click="submitStarredFollow">Special Follow</button>
+        <p v-if="starMessage" class="muted">{{ starMessage }}</p>
       </div>
     </div>
 
@@ -131,6 +151,26 @@ h2 {
   margin-top: 18px;
   color: var(--ink);
   line-height: 1.8;
+}
+
+.profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.profile-tags span {
+  padding: 6px 10px;
+  color: var(--green);
+  background: #eef8f2;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.star-button {
+  margin-left: 10px;
 }
 
 .social-grid {

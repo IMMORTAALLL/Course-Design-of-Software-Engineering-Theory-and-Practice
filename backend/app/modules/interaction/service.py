@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.exceptions import ConflictError, ForbiddenError, ResourceNotFoundError, StateNotAllowedError
 from app.modules.admin.models import ReportItem
-from app.modules.auth.models import User
+from app.modules.auth.models import User, UserProfile
 from app.modules.forum.crud import get_post, post_to_item
 from app.modules.forum.models import Post
 from app.modules.interaction.models import (
@@ -11,7 +13,10 @@ from app.modules.interaction.models import (
     Group,
     GroupJoinRequest,
     GroupMember,
+    GroupPost,
+    GroupResource,
     Notification,
+    PrivateMessage,
     UserAction,
     UserFollow,
 )
@@ -30,6 +35,8 @@ def _user_brief(user: User | None) -> dict:
         "avatarUrl": profile.avatar_url if profile else None,
         "authLevel": profile.auth_level if profile else 0,
         "influenceScore": profile.influence_score if profile else 0,
+        "level": profile.level if profile else 1,
+        "badgeTitle": profile.badge_title if profile else None,
     }
 
 
@@ -93,6 +100,57 @@ def _group_to_dict(db: Session, group: Group, current_user_id: int | None = None
     }
 
 
+def _message_to_dict(message: PrivateMessage) -> dict:
+    sender = _user_brief(message.sender)
+    receiver = _user_brief(message.receiver)
+    return {
+        "id": message.id,
+        "senderId": message.sender_id,
+        "senderNickname": sender["nickname"],
+        "receiverId": message.receiver_id,
+        "receiverNickname": receiver["nickname"],
+        "content": message.content,
+        "isRead": message.is_read,
+        "createdAt": message.created_at,
+    }
+
+
+def _group_post_to_dict(item: GroupPost) -> dict:
+    author = _user_brief(item.author)
+    return {
+        "id": item.id,
+        "groupId": item.group_id,
+        "userId": item.user_id,
+        "authorNickname": author["nickname"],
+        "content": item.content,
+        "createdAt": item.created_at,
+    }
+
+
+def _group_resource_to_dict(item: GroupResource) -> dict:
+    author = _user_brief(item.author)
+    return {
+        "id": item.id,
+        "groupId": item.group_id,
+        "userId": item.user_id,
+        "authorNickname": author["nickname"],
+        "title": item.title,
+        "resourceUrl": item.resource_url,
+        "description": item.description,
+        "createdAt": item.created_at,
+    }
+
+
+def _require_group_member(db: Session, group_id: int, user: User) -> Group:
+    group = db.query(Group).filter(Group.id == group_id).first()
+    if group is None:
+        raise ResourceNotFoundError("Group not found")
+    member = db.get(GroupMember, {"group_id": group_id, "user_id": user.id})
+    if member is None:
+        raise ForbiddenError("Join the group before using this feature")
+    return group
+
+
 def create_notification(
     db: Session,
     user_id: int,
@@ -112,6 +170,25 @@ def create_notification(
             target_id=target_id,
         )
     )
+
+
+def _notify_mentions(db: Session, author: User, content: str, target_type: str, target_id: int) -> None:
+    profiles = db.query(UserProfile).filter(UserProfile.user_id != author.id).all()
+    author_name = author.profile.nickname if author.profile else "Community user"
+    notified: set[int] = set()
+    for profile in profiles:
+        if profile.user_id in notified:
+            continue
+        if f"@{profile.nickname}" in content:
+            create_notification(
+                db,
+                profile.user_id,
+                "You were mentioned",
+                f"{author_name} mentioned you",
+                target_type=target_type,
+                target_id=target_id,
+            )
+            notified.add(profile.user_id)
 
 
 def list_comments(db: Session, post_id: int) -> list[dict]:
@@ -153,6 +230,7 @@ def add_comment(db: Session, post_id: int, user: User, content: str, parent_id: 
             target_type="post",
             target_id=post.id,
         )
+    _notify_mentions(db, user, content, "post", post.id)
 
     db.commit()
     db.refresh(comment)
@@ -368,6 +446,22 @@ def toggle_follow(db: Session, target_user_id: int, user: User) -> dict:
     return {"following": following, "followerCount": follower_count}
 
 
+def set_starred_follow(db: Session, target_user_id: int, user: User, starred: bool) -> dict:
+    if target_user_id == user.id:
+        raise ConflictError("Cannot follow yourself")
+    target = db.query(User).filter(User.id == target_user_id).first()
+    if target is None:
+        raise ResourceNotFoundError("User not found")
+    follow = db.get(UserFollow, {"follower_id": user.id, "followed_id": target_user_id})
+    if follow is None:
+        follow = UserFollow(follower_id=user.id, followed_id=target_user_id, is_starred=1 if starred else 0)
+        db.add(follow)
+    else:
+        follow.is_starred = 1 if starred else 0
+    db.commit()
+    return {"following": True, "starred": bool(follow.is_starred)}
+
+
 def list_followers(db: Session, user_id: int) -> list[dict]:
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
@@ -387,15 +481,20 @@ def list_following(db: Session, user_id: int) -> list[dict]:
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise ResourceNotFoundError("用户不存在")
-    following = (
-        db.query(User)
+    rows = (
+        db.query(User, UserFollow.is_starred)
         .join(UserFollow, UserFollow.followed_id == User.id)
         .options(joinedload(User.profile))
         .filter(UserFollow.follower_id == user_id)
-        .order_by(desc(UserFollow.created_at))
+        .order_by(desc(UserFollow.is_starred), desc(UserFollow.created_at))
         .all()
     )
-    return [_user_brief(item) for item in following]
+    items = []
+    for user, is_starred in rows:
+        data = _user_brief(user)
+        data["isStarred"] = bool(is_starred)
+        items.append(data)
+    return items
 
 
 def list_following_feed(db: Session, user: User, page: int, size: int) -> tuple[list[dict], int]:
@@ -530,3 +629,126 @@ def leave_group(db: Session, group_id: int, user: User) -> dict:
             db.delete(request)
             db.commit()
     return get_group(db, group_id, user.id)
+
+
+def send_private_message(db: Session, target_user_id: int, user: User, content: str) -> dict:
+    if target_user_id == user.id:
+        raise ConflictError("Cannot send a private message to yourself")
+    target = db.query(User).filter(User.id == target_user_id).first()
+    if target is None:
+        raise ResourceNotFoundError("User not found")
+    message = PrivateMessage(sender_id=user.id, receiver_id=target_user_id, content=content)
+    db.add(message)
+    create_notification(
+        db,
+        target_user_id,
+        "New private message",
+        f"{user.profile.nickname if user.profile else 'Community user'} sent you a message",
+        target_type="message",
+        target_id=user.id,
+    )
+    db.commit()
+    db.refresh(message)
+    message = (
+        db.query(PrivateMessage)
+        .options(
+            joinedload(PrivateMessage.sender).joinedload(User.profile),
+            joinedload(PrivateMessage.receiver).joinedload(User.profile),
+        )
+        .filter(PrivateMessage.id == message.id)
+        .first()
+    )
+    return _message_to_dict(message)
+
+
+def list_private_messages(db: Session, user: User) -> list[dict]:
+    messages = (
+        db.query(PrivateMessage)
+        .options(
+            joinedload(PrivateMessage.sender).joinedload(User.profile),
+            joinedload(PrivateMessage.receiver).joinedload(User.profile),
+        )
+        .filter((PrivateMessage.sender_id == user.id) | (PrivateMessage.receiver_id == user.id))
+        .order_by(desc(PrivateMessage.created_at))
+        .limit(100)
+        .all()
+    )
+    return [_message_to_dict(item) for item in messages]
+
+
+def create_group_post(db: Session, group_id: int, user: User, content: str) -> dict:
+    group = _require_group_member(db, group_id, user)
+    item = GroupPost(group_id=group_id, user_id=user.id, content=content)
+    db.add(item)
+    if group.creator_id != user.id:
+        create_notification(
+            db,
+            group.creator_id,
+            "New group discussion",
+            f"{user.profile.nickname if user.profile else 'Community user'} posted in {group.name}",
+            target_type="group",
+            target_id=group.id,
+        )
+    db.commit()
+    db.refresh(item)
+    item = (
+        db.query(GroupPost)
+        .options(joinedload(GroupPost.author).joinedload(User.profile))
+        .filter(GroupPost.id == item.id)
+        .first()
+    )
+    return _group_post_to_dict(item)
+
+
+def list_group_posts(db: Session, group_id: int, user: User) -> list[dict]:
+    _require_group_member(db, group_id, user)
+    items = (
+        db.query(GroupPost)
+        .options(joinedload(GroupPost.author).joinedload(User.profile))
+        .filter(GroupPost.group_id == group_id)
+        .order_by(desc(GroupPost.created_at))
+        .limit(50)
+        .all()
+    )
+    return [_group_post_to_dict(item) for item in items]
+
+
+def create_group_resource(
+    db: Session,
+    group_id: int,
+    user: User,
+    title: str,
+    resource_url: str,
+    description: str | None = None,
+) -> dict:
+    _require_group_member(db, group_id, user)
+    item = GroupResource(
+        group_id=group_id,
+        user_id=user.id,
+        title=title,
+        resource_url=resource_url,
+        description=description,
+    )
+    db.add(item)
+    db.commit()
+    db.refresh(item)
+    item = (
+        db.query(GroupResource)
+        .options(joinedload(GroupResource.author).joinedload(User.profile))
+        .filter(GroupResource.id == item.id)
+        .first()
+    )
+    return _group_resource_to_dict(item)
+
+
+def list_group_resources(db: Session, group_id: int, user: User) -> list[dict]:
+    _require_group_member(db, group_id, user)
+    items = (
+        db.query(GroupResource)
+        .options(joinedload(GroupResource.author).joinedload(User.profile))
+        .filter(GroupResource.group_id == group_id)
+        .order_by(desc(GroupResource.created_at))
+        .limit(50)
+        .all()
+    )
+    return [_group_resource_to_dict(item) for item in items]

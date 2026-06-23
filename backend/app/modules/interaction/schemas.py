@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -16,13 +18,13 @@ class CommentOut(BaseModel):
     id: int
     post_id: int = Field(alias="postId")
     user_id: int = Field(alias="userId")
-    parent_id: int | None = Field(None, alias="parentId")
+    parent_id: Optional[int] = Field(None, alias="parentId")
     author_nickname: str = Field(alias="authorNickname")
     author_auth_level: int = Field(0, alias="authorAuthLevel")
     content: str
     like_count: int = Field(alias="likeCount")
     created_at: datetime = Field(alias="createdAt")
-    replies: list["CommentOut"] = Field(default_factory=list)
+    replies: List["CommentOut"] = Field(default_factory=list)
 
     model_config = {"populate_by_name": True}
 
@@ -47,10 +49,15 @@ class FollowResult(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class StarFollowResult(BaseModel):
+    following: bool
+    starred: bool
+
+
 class UserBriefOut(BaseModel):
     id: int
-    nickname: str | None = None
-    avatar_url: str | None = Field(None, alias="avatarUrl")
+    nickname: Optional[str] = None
+    avatar_url: Optional[str] = Field(None, alias="avatarUrl")
     auth_level: int = Field(0, alias="authLevel")
     influence_score: int = Field(0, alias="influenceScore")
 
@@ -62,8 +69,8 @@ class NotificationOut(BaseModel):
     title: str
     content: str
     notification_type: str = Field(alias="notificationType")
-    target_type: str | None = Field(None, alias="targetType")
-    target_id: int | None = Field(None, alias="targetId")
+    target_type: Optional[str] = Field(None, alias="targetType")
+    target_id: Optional[int] = Field(None, alias="targetId")
     is_read: bool = Field(alias="isRead")
     created_at: datetime = Field(alias="createdAt")
 
@@ -72,20 +79,73 @@ class NotificationOut(BaseModel):
 
 class GroupCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
-    description: str | None = Field(default=None, max_length=255)
+    description: Optional[str] = Field(default=None, max_length=255)
     permission: Literal[1, 2, 3] = 1
 
 
 class GroupOut(BaseModel):
     id: int
     name: str
-    description: str | None = None
+    description: Optional[str] = None
     permission: int
     creator_id: int = Field(alias="creatorId")
     creator_nickname: str = Field(alias="creatorNickname")
     member_count: int = Field(alias="memberCount")
     joined: bool
     pending: bool = False
+    created_at: datetime = Field(alias="createdAt")
+
+    model_config = {"populate_by_name": True}
+
+
+class PrivateMessageCreate(BaseModel):
+    content: str = Field(..., min_length=1, max_length=1000)
+
+
+class PrivateMessageOut(BaseModel):
+    id: int
+    sender_id: int = Field(alias="senderId")
+    sender_nickname: str = Field(alias="senderNickname")
+    receiver_id: int = Field(alias="receiverId")
+    receiver_nickname: str = Field(alias="receiverNickname")
+    content: str
+    is_read: bool = Field(alias="isRead")
+    created_at: datetime = Field(alias="createdAt")
+
+    model_config = {"populate_by_name": True}
+
+
+class GroupPostCreate(BaseModel):
+    content: str = Field(..., min_length=1, max_length=1000)
+
+
+class GroupPostOut(BaseModel):
+    id: int
+    group_id: int = Field(alias="groupId")
+    user_id: int = Field(alias="userId")
+    author_nickname: str = Field(alias="authorNickname")
+    content: str
+    created_at: datetime = Field(alias="createdAt")
+
+    model_config = {"populate_by_name": True}
+
+
+class GroupResourceCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=120)
+    resource_url: str = Field(..., alias="resourceUrl", min_length=1, max_length=255)
+    description: Optional[str] = Field(default=None, max_length=255)
+
+    model_config = {"populate_by_name": True}
+
+
+class GroupResourceOut(BaseModel):
+    id: int
+    group_id: int = Field(alias="groupId")
+    user_id: int = Field(alias="userId")
+    author_nickname: str = Field(alias="authorNickname")
+    title: str
+    resource_url: str = Field(alias="resourceUrl")
+    description: Optional[str] = None
     created_at: datetime = Field(alias="createdAt")
 
     model_config = {"populate_by_name": True}

@@ -2053,3 +2053,33 @@ GET /api/admin/statistics
 ### 7. 当前实现说明
 
 当前实现已经满足后台管理首页、内容审核、举报处理、敏感词管理、用户处罚记录和运营统计的基础联调。独立的用户禁言、封号写接口还没有拆出；目前举报处理里的 `banned` 动作只更新举报处理结果，不会同步修改用户账号状态。
+
+## 十二、2026.6.22 实现对齐补充
+
+当前后端实现已在原接口设计基础上补齐下列接口，作为最新联调口径：
+
+| 分类 | 方法 | 路径 | 权限 | 说明 |
+| --- | --- | --- | --- | --- |
+| 资料扩展 | `PUT` | `/api/users/me/profile` | User | 支持 `experienceTags`、`interestMarkets`、`privacyLevel` |
+| 资料扩展 | `GET` | `/api/users/{user_id}` | Public | 返回等级、积分、徽章、发帖数、经验标签和关注市场 |
+| 板块维护 | `PUT` | `/api/admin/sections/{section_id}` | Admin | 修改板块 |
+| 板块维护 | `DELETE` | `/api/admin/sections/{section_id}` | Admin | 停用板块 |
+| 标签维护 | `PUT` | `/api/admin/tags/{tag_id}` | Admin | 修改标签 |
+| 标签维护 | `DELETE` | `/api/admin/tags/{tag_id}` | Admin | 删除标签 |
+| 帖子筛选 | `GET` | `/api/posts` | Public | 支持 `tag_id`、`is_elite`、`sort=latest/hot` |
+| 帖子附件 | `GET` | `/api/posts/{post_id}/attachments` | Public | 查看附件 |
+| 帖子附件 | `POST` | `/api/posts/{post_id}/attachments` | User | 添加附件 URL |
+| 投票 | `GET` | `/api/posts/{post_id}/poll` | Public | 查看投票选项 |
+| 投票 | `POST` | `/api/posts/{post_id}/poll-options` | User | 添加投票选项 |
+| 投票 | `POST` | `/api/poll-options/{option_id}/vote` | User | 投票或改投 |
+| 搜索 | `GET` | `/api/search/suggestions` | Public | 返回标签、用户和帖子建议 |
+| 热榜 | `GET` | `/api/hot-topics` | Public | 返回 daily/weekly 热议话题 |
+| 特别关注 | `PUT` | `/api/users/{user_id}/follow/star` | User | 设置特别关注 |
+| 私信 | `GET` | `/api/me/messages` | User | 查看收发私信 |
+| 私信 | `POST` | `/api/users/{user_id}/messages` | User | 发送私信 |
+| 群组讨论 | `GET` | `/api/groups/{group_id}/posts` | Group Member | 查看群内讨论 |
+| 群组讨论 | `POST` | `/api/groups/{group_id}/posts` | Group Member | 发布群内讨论 |
+| 群组资源 | `GET` | `/api/groups/{group_id}/resources` | Group Member | 查看群内资源 |
+| 群组资源 | `POST` | `/api/groups/{group_id}/resources` | Group Member | 添加群内资源 |
+
+实现补充规则：发帖时会根据后台敏感词和同一作者重复标题进行自动审核入队，命中后写入 `audit_queue_items` 并将帖子状态置为 `PENDING`；评论内容包含 `@昵称` 时会给被提及用户写入通知。

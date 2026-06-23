@@ -12,6 +12,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 清理旧表
 -- ==========================================================
 DROP TABLE IF EXISTS `post_tags`;
+DROP TABLE IF EXISTS `poll_votes`;
+DROP TABLE IF EXISTS `poll_options`;
 DROP TABLE IF EXISTS `notifications`;
 DROP TABLE IF EXISTS `user_moderation_records`;
 DROP TABLE IF EXISTS `sensitive_words`;
@@ -22,8 +24,11 @@ DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `hot_topics`;
 DROP TABLE IF EXISTS `search_history`;
 DROP TABLE IF EXISTS `group_join_requests`;
+DROP TABLE IF EXISTS `group_resources`;
+DROP TABLE IF EXISTS `group_posts`;
 DROP TABLE IF EXISTS `group_members`;
 DROP TABLE IF EXISTS `groups`;
+DROP TABLE IF EXISTS `private_messages`;
 DROP TABLE IF EXISTS `user_follows`;
 DROP TABLE IF EXISTS `user_actions`;
 DROP TABLE IF EXISTS `attachments`;
@@ -59,6 +64,14 @@ CREATE TABLE `user_profiles` (
     `auth_level` TINYINT NOT NULL DEFAULT 0 COMMENT '0:基础, 1:实名, 2:专业',
     `risk_preference` TINYINT COMMENT '1:保守, 2:稳健, 3:进取',
     `influence_score` INT NOT NULL DEFAULT 0 COMMENT '影响力值',
+    `experience_tags` VARCHAR(255) COMMENT 'experience tags JSON',
+    `interest_markets` VARCHAR(255) COMMENT 'interest markets JSON',
+    `privacy_level` TINYINT NOT NULL DEFAULT 0 COMMENT '0 public, 1 partial, 2 private',
+    `post_count` INT NOT NULL DEFAULT 0 COMMENT 'post count',
+    `elite_count` INT NOT NULL DEFAULT 0 COMMENT 'elite post count',
+    `points` INT NOT NULL DEFAULT 0 COMMENT 'user points',
+    `level` INT NOT NULL DEFAULT 1 COMMENT 'user level',
+    `badge_title` VARCHAR(50) COMMENT 'achievement badge',
     CONSTRAINT `fk_profile_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户资料表';
 
@@ -154,6 +167,27 @@ CREATE TABLE `attachments` (
     CONSTRAINT `fk_attachment_post` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='附件表';
 
+CREATE TABLE `poll_options` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `post_id` BIGINT NOT NULL COMMENT 'poll post id',
+    `option_text` VARCHAR(120) NOT NULL COMMENT 'option text',
+    `vote_count` INT NOT NULL DEFAULT 0 COMMENT 'vote count',
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_poll_option_post` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='poll options';
+
+CREATE TABLE `poll_votes` (
+    `post_id` BIGINT NOT NULL,
+    `user_id` BIGINT NOT NULL,
+    `option_id` BIGINT NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`post_id`, `user_id`),
+    CONSTRAINT `fk_poll_vote_post` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_poll_vote_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_poll_vote_option` FOREIGN KEY (`option_id`) REFERENCES `poll_options`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='poll votes';
+
 CREATE TABLE `user_actions` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `user_id` BIGINT NOT NULL,
@@ -168,6 +202,18 @@ CREATE TABLE `user_actions` (
 -- ==========================================================
 -- 模块 3：社交与关系系统 (Social System)
 -- ==========================================================
+
+CREATE TABLE `private_messages` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `sender_id` BIGINT NOT NULL,
+    `receiver_id` BIGINT NOT NULL,
+    `content` TEXT NOT NULL,
+    `is_read` TINYINT NOT NULL DEFAULT 0,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_private_message_sender` FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_private_message_receiver` FOREIGN KEY (`receiver_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='private messages';
 
 CREATE TABLE `user_follows` (
     `follower_id` BIGINT NOT NULL,
@@ -198,6 +244,30 @@ CREATE TABLE `group_members` (
     CONSTRAINT `fk_member_group` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`),
     CONSTRAINT `fk_member_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='群成员表';
+
+CREATE TABLE `group_posts` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `group_id` BIGINT NOT NULL,
+    `user_id` BIGINT NOT NULL,
+    `content` TEXT NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_group_post_group` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_group_post_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='group discussions';
+
+CREATE TABLE `group_resources` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `group_id` BIGINT NOT NULL,
+    `user_id` BIGINT NOT NULL,
+    `title` VARCHAR(120) NOT NULL,
+    `resource_url` VARCHAR(255) NOT NULL,
+    `description` VARCHAR(255),
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_group_resource_group` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_group_resource_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='group resources';
 
 CREATE TABLE `group_join_requests` (
     `group_id` BIGINT NOT NULL,

@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -40,7 +43,7 @@ class SensitiveWord(Base):
     risk_level: Mapped[str] = mapped_column(String(16), nullable=False, default="medium")
     action: Mapped[str] = mapped_column(String(32), nullable=False, default="manual_review")
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
 
 

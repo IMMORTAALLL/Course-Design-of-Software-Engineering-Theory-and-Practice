@@ -41,7 +41,37 @@ export interface PostCreatePayload {
   section_id: number;
   title: string;
   content: string;
+  post_type?: number;
   tag_ids: number[];
+}
+
+export interface AttachmentItem {
+  id: number;
+  postId: number;
+  fileUrl: string;
+  fileType: string;
+  createdAt: string;
+}
+
+export interface PollOptionItem {
+  id: number;
+  postId: number;
+  optionText: string;
+  voteCount: number;
+}
+
+export interface SearchSuggestion {
+  type: string;
+  label: string;
+  value: string;
+}
+
+export interface HotTopic {
+  id: number;
+  name: string;
+  tagType: string;
+  postCount: number;
+  hotScore: number;
 }
 
 export interface PageResult<T> {

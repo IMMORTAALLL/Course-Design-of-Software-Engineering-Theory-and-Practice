@@ -23,6 +23,21 @@ def ensure_sqlite_demo_schema() -> None:
     if engine.dialect.name != "sqlite":
         return
     with engine.begin() as conn:
+        profile_columns = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(user_profiles)").fetchall()}
+        profile_defaults = {
+            "experience_tags": "VARCHAR(255)",
+            "interest_markets": "VARCHAR(255)",
+            "privacy_level": "SMALLINT NOT NULL DEFAULT 0",
+            "post_count": "INTEGER NOT NULL DEFAULT 0",
+            "elite_count": "INTEGER NOT NULL DEFAULT 0",
+            "points": "INTEGER NOT NULL DEFAULT 0",
+            "level": "INTEGER NOT NULL DEFAULT 1",
+            "badge_title": "VARCHAR(50)",
+        }
+        for column_name, column_def in profile_defaults.items():
+            if column_name not in profile_columns:
+                conn.exec_driver_sql(f"ALTER TABLE user_profiles ADD COLUMN {column_name} {column_def}")
+
         post_columns = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(posts)").fetchall()}
         if "post_type" not in post_columns:
             conn.exec_driver_sql("ALTER TABLE posts ADD COLUMN post_type INTEGER NOT NULL DEFAULT 1")
