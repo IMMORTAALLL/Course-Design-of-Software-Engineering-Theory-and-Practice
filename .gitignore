@@ -39,7 +39,9 @@ backend/uploads/
 backend/forum_system.db
 frontend/coverage/
 
-# Office temporary files
+# Office documents and temporary files
+*.doc
+*.docx
 ~$*.docx
 ~$*.xlsx
 ~$*.pptx
