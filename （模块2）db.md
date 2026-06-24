@@ -567,7 +567,7 @@ INSERT INTO `sections` (`name`, `description`, `sort_order`) VALUES
 ('基金专区', '各类公募/私募基金交流', 9),
 ('量化交易', '量化模型与算法策略探讨', 8);
 
-## 5. 成员 D 后台管理实现补充
+## 5. 后台管理实现补充
 
 原数据库设计文档以 MySQL 8.0 为正式设计目标。当前成员 D 在本地联调阶段使用 `FastAPI + SQLAlchemy`，默认连接为 SQLite：
 
