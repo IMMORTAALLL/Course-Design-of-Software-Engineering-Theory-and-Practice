@@ -4,6 +4,37 @@
 
 ## 项目名称：智投社区
 
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red.svg)
+![Vue](https://img.shields.io/badge/Vue-3.x-brightgreen.svg)
+![Vite](https://img.shields.io/badge/Vite-5.x-purple.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)
+![SQLite](https://img.shields.io/badge/SQLite-Development-lightgrey.svg)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-orange.svg)
+![JWT](https://img.shields.io/badge/JWT-Auth-black.svg)
+![bcrypt](https://img.shields.io/badge/bcrypt-Password%20Hashing-yellow.svg)
+
+
+## 云端演示地址：
+本项目已实现在云服务器部署
+```text
+http://8.148.72.200/
+```
+演示账号密码均为：
+
+```text
+Admin123456
+```
+
+| 角色 | 邮箱 | 可使用功能 |
+| --- | --- | --- |
+| 管理员 | `admin@stockforum.com` | 普通用户功能 + 后台管理、审核、举报处理、敏感词、统计 |
+| 普通用户 | `value@stockforum.com` | 登录、个人中心、发帖、评论、点赞、收藏、关注、群组、通知、私信 |
+| 专业用户 | `quant@stockforum.com` | 普通用户功能 + 专业认证、长文分析演示 |
+| 游客 | 无需登录 | 首页、板块、帖子详情、搜索结果、热榜、公开群组浏览 |
+
+## 项目成员：
 ||姓名|班级|学号|GitHub账号|
 |--|--|--|--|--|
 |负责人|谢亨义|软件2401班|U202411368|IMMORTAALLL|
@@ -24,6 +55,74 @@
 | 数据库 | SQLite（默认开发）/ MySQL 8.0（可选部署） |
 | 认证方式 | JWT Bearer Token |
 | 密码加密 | bcrypt |
+
+## 项目结构
+
+本项目已完成前后端分离基础架构、数据库脚本、课程设计文档、测试截图和部署交付材料，主要目录结构如下：
+
+```text
+Course-Design-of-Software-Engineering-Theory-and-Practice/
+├── README.md                         # 项目总说明
+├── （模块1）user_stories.md          # 用户故事
+├── （模块1）use_cases.md             # 交互场景
+├── （模块1）ai.md                    # 模块一 AI 使用记录
+├── （模块1）assign.md                # 模块一分工记录
+├── （模块2）architect.md             # 架构与类设计
+├── （模块2）backend_api.md           # 后端接口设计
+├── （模块2）db.md                    # 数据库设计
+├── （模块2）ui_design.md             # 前端 UI 设计
+├── （模块2）ai.md                    # 模块二 AI 使用记录
+├── （模块2）assign.md                # 模块二分工记录
+├── （模块3）ai.md                    # 编码实现阶段 AI 使用记录
+├── （模块3）assign.md                # 模块三分工记录
+├── （模块4）test.md                  # 测试报告
+├── （模块4）ai.md                    # 测试调试阶段 AI 使用记录
+├── （模块4）assign.md                # 模块四分工记录
+├── （模块5）install.md               # 本地部署说明
+├── （模块5）user_guid.md             # 软件使用说明书
+├── （模块5）ai.md                    # 部署交付阶段 AI 使用记录
+├── （模块5）assign.md                # 模块五分工记录
+├── backend/                          # FastAPI 后端项目
+│   ├── README.md                     # 后端说明
+│   ├── requirements.txt              # Python 依赖
+│   ├── .env.example                  # 环境变量示例
+│   └── app/
+│       ├── main.py                   # FastAPI 应用入口
+│       ├── config.py                 # 配置读取
+│       ├── database.py               # 数据库连接与会话
+│       ├── common/                   # 统一响应、异常、依赖等通用代码
+│       ├── security/                 # JWT、密码加密等安全工具
+│       └── modules/                  # 后端业务模块
+│           ├── auth/                 # 用户、登录、权限、认证、风险测评
+│           ├── forum/                # 板块、帖子、标签、搜索、热榜、投票、附件
+│           ├── interaction/          # 评论、点赞、收藏、关注、通知、私信、群组
+│           └── admin/                # 后台概览、审核、举报、敏感词、统计
+├── frontend/                         # Vue 3 + Vite + TypeScript 前端项目
+│   ├── README.md                     # 前端说明
+│   ├── package.json                  # 前端依赖与脚本
+│   ├── vite.config.ts                # Vite 配置与 API 代理
+│   ├── index.html                    # 前端 HTML 入口
+│   └── src/
+│       ├── main.ts                   # Vue 应用入口
+│       ├── App.vue                   # 全局布局与顶部导航
+│       ├── shared/                   # 公共请求封装、路由、样式和后台布局
+│       └── modules/                  # 前端业务模块
+│           ├── auth/                 # 登录、注册、个人中心、认证、风险测评、用户主页
+│           ├── forum/                # 首页、板块、发帖、帖子详情、搜索、热榜
+│           ├── interaction/          # 评论组件、收藏、关注、通知、私信、群组
+│           └── admin/                # 后台首页、审核、举报、敏感词、用户处罚、统计
+├── database/                         # 数据库脚本
+│   ├── README.md                     # 数据库说明
+│   ├── schema.sql                    # 建表脚本
+│   └── seed.sql                      # 演示数据
+├── scripts/                          # 辅助脚本
+│   ├── README.md                     # 脚本说明
+│   └── backend_smoke_test.py         # 后端核心接口烟测脚本
+└── figs/                             # 项目截图与 AI 迭代截图
+    ├── e2e-20260617/                # 浏览器联调截图
+    ├── （模块1）ai-image*.png        # 模块一 AI 记录截图
+    └── （模块2）ai-*.png             # 模块二 AI 记录截图
+```
 
 ## 模块分工
 
@@ -140,9 +239,8 @@
 
 | 文档 | 说明 |
 |------|------|
-| [部署说明](部署说明.md) | 本地部署步骤、验证命令和常见问题 |
-| [用户手册](用户手册.md) | 系统访问、账号角色和功能操作说明 |
-| [项目总结报告](项目总结报告.md) | 课程设计整体成果总结 |
+| [部署说明](（模块5）install.md) | 本地部署步骤、验证命令和常见问题 |
+| [用户手册](（模块5）user_guid.md) | 系统访问、账号角色和功能操作说明 |
 | [模块五 AI 使用记录](（模块5）ai.md) | 部署交付阶段与 AI 的交互过程记录 |
 | [模块五分工记录](（模块5）assign.md) | 模块五团队成员完成情况 |
 
